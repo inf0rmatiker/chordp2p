@@ -1,0 +1,76 @@
+
+plugins {
+    id 'java'
+    id 'idea'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/java'
+        }
+    }
+
+    test {
+        java {
+            srcDir 'src/test/java'
+        }
+    }
+}
+
+repositories {
+    // Use Maven Central for resolving dependencies.
+    mavenCentral()
+}
+
+dependencies {
+
+    // Use JUnit test framework.
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
+
+    // https://mvnrepository.com/artifact/gnu.getopt/java-getopt
+    implementation group: 'gnu.getopt', name: 'java-getopt', version: '1.0.13'
+
+    // For logging
+    implementation group: 'org.slf4j', name: 'slf4j-log4j12', version: '2.0.0-alpha5'
+
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
+    // For logging
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.0-alpha5'
+
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
+    // For logging
+    // testImplementation group: 'org.slf4j', name: 'slf4j-simple', version: '2.0.0-alpha5'
+
+    // https://mvnrepository.com/artifact/commons-codec/commons-codec
+    // For encoding/decoding hex checksum strings
+    implementation group: 'commons-codec', name: 'commons-codec', version: '1.15'
+
+    // For deleting an entire directory, and discovering disk space available
+    implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
+
+    // For mocking Sockets
+    testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.12.4'
+}
+
+
+test {
+    useJUnitPlatform()
+
+    testLogging {
+        showStandardStreams = true
+    }
+}
+
+jar {
+    exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA','META-INF/LICENSE.txt','META-INF/NOTICE.txt'
+    archiveClassifier = 'uber'
+
+    from sourceSets.main.output
+
+    dependsOn configurations.runtimeClasspath
+    from {
+        configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
+    }
+}

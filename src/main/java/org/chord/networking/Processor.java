@@ -23,21 +23,6 @@ public abstract class Processor implements Runnable {
     public Socket socket;
 
     /**
-     * Executed by Thread.start() as its own Thread; invokes processMessage() with a fully constructed
-     * and unmarshaled Message from the MessageFactory.
-     */
-    @Override
-    public void run() {
-        try {
-            DataInputStream dataInputStream = new DataInputStream(this.socket.getInputStream());
-            Message message = MessageFactory.getInstance().createMessage(dataInputStream);
-            process(message);
-        } catch (IOException e) {
-            log.error("Caught IOException!");
-        }
-    }
-
-    /**
      * Sends a Message response on an already-established Socket connection.
      *
      * @param socket  The Socket that has previously been established.
@@ -53,6 +38,21 @@ public abstract class Processor implements Runnable {
             }
         } else {
             log.warn("Socket is null or has been disconnected; aborting {} response", message.getType());
+        }
+    }
+
+    /**
+     * Executed by Thread.start() as its own Thread; invokes processMessage() with a fully constructed
+     * and unmarshaled Message from the MessageFactory.
+     */
+    @Override
+    public void run() {
+        try {
+            DataInputStream dataInputStream = new DataInputStream(this.socket.getInputStream());
+            Message message = MessageFactory.getInstance().createMessage(dataInputStream);
+            process(message);
+        } catch (IOException e) {
+            log.error("Caught IOException!");
         }
     }
 

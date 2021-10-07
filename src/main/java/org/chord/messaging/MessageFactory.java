@@ -47,8 +47,10 @@ public class MessageFactory {
         Message.MessageType type = Message.typeFromInteger(integerType);
         if (type != null) {
             switch (type) {
-                // case REGISTER_PEER_REQUEST: return new RegisterPeerRequest(dataInputStream);
-                // case REGISTER_PEER_RESPONSE: return new RegisterPeerResponse(dataInputStream);
+                case REGISTER_PEER_REQUEST:
+                    return new RegisterPeerRequest(dataInputStream);
+                case REGISTER_PEER_RESPONSE:
+                    return new RegisterPeerResponse(dataInputStream);
                 default:
                     return null;
             }

@@ -6,19 +6,23 @@ import org.slf4j.LoggerFactory;
 public class MessagingNode {
     private static final Logger log = LoggerFactory.getLogger(MessagingNode.class);
 
-    private final String hostname;
-    private final int port;
+    private final String discoveryNodeHostname;
+    private final int discoveryNodePort;
 
-    public MessagingNode(String hostname, int port) {
-        this.hostname = hostname;
-        this.port = port;
+    public MessagingNode(String discoveryNodeHostname, int discoveryNodePort) {
+        this.discoveryNodeHostname = discoveryNodeHostname;
+        this.discoveryNodePort = discoveryNodePort;
     }
 
     public String getHostname() {
-        return hostname;
+        return discoveryNodeHostname;
     }
 
-    public int getPort() {
-        return port;
+    public int getDiscoveryNodePort() {
+        return discoveryNodePort;
+    }
+
+    public void startServer() {
+        new MessagingNodeServer(this).launchAsThread();
     }
 }

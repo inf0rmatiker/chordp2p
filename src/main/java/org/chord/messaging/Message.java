@@ -11,16 +11,202 @@ import java.util.Set;
 
 public abstract class Message {
     private static final Logger log = LoggerFactory.getLogger(Message.class);
-
-    public enum MessageType {
-        REGISTER_PEER_REQUEST, REGISTER_PEER_RESPONSE
-    }
-
     public String hostname, ipAddress;
     public Integer port;
     public byte[] marshaledBytes;
 
+    /**
+     * Writes an integer to the output stream.
+     *
+     * @param dataOutputStream The DataOutputStream we are writing to.
+     * @param value            The int we are writing.
+     * @throws IOException If fails to write to the DataOutputStream
+     */
+    public static void writeInt(DataOutputStream dataOutputStream, int value) throws IOException {
+        dataOutputStream.writeInt(value);
+    }
+
     // --- Getters ---
+
+    /**
+     * Reads and returns an integer to the input stream.
+     *
+     * @param dataInputStream The DataInputStream we are reading from.
+     * @return The int we read.
+     * @throws IOException If fails to read from the DataInputStream
+     */
+    public static int readInt(DataInputStream dataInputStream) throws IOException {
+        return dataInputStream.readInt();
+    }
+
+    /**
+     * Reads a string from the DataInputStream passed in as follows:
+     * 1. Reads the string length as an integer.
+     * 2. Reads the string bytes; creates and returns a string from said bytes.
+     *
+     * @param dataInputStream The DataInputStream containing the bytes we are reading.
+     * @return The String, whose length is specified before the string bytes.
+     * @throws IOException If fails to read from DataInputStream
+     */
+    public static String readString(DataInputStream dataInputStream) throws IOException {
+        int stringLength = dataInputStream.readInt();
+        byte[] stringBytes = new byte[stringLength];
+        dataInputStream.readFully(stringBytes, 0, stringLength);
+        return new String(stringBytes);
+    }
+
+    /**
+     * Writes a string to the DataOutputString passed in as follows:
+     * 1. Writes the string length as an integer
+     * 2. Writes the string bytes
+     *
+     * @param dataOutputStream DataOutputStream containing the byte array we are writing to
+     * @param value            The String value we are writing to the byte array
+     * @throws IOException If fails to write to DataOutputStream
+     */
+    public static void writeString(DataOutputStream dataOutputStream, String value) throws IOException {
+        dataOutputStream.writeInt(value.length());
+        dataOutputStream.writeBytes(value);
+    }
+
+    /**
+     * Reads a string array from the DataInputStream passed in as follows:
+     * 1. Reads the array length as an integer n.
+     * 2. Allocates a string array of size n.
+     * 3. Iterates n times, reading a string each time into the string array.
+     *
+     * @param dataInputStream The DataInputStream containing the bytes we are reading.
+     * @throws IOException If fails to read from DataInputStream
+     */
+    public static String[] readStringArray(DataInputStream dataInputStream) throws IOException {
+        int count = readInt(dataInputStream);
+        String[] array = new String[count];
+        for (int i = 0; i < count; i++) {
+            array[i] = readString(dataInputStream);
+        }
+        return array;
+    }
+
+    /**
+     * Writes a string array to the DataOutputString passed in as follows:
+     * 1. Writes the string array length (n) as an integer.
+     * 2. Iterates n times, writing a string from the array to the stream each time.
+     *
+     * @param dataOutputStream DataOutputStream containing the byte array we are writing to
+     * @param values           The String values we are writing to the byte array
+     * @throws IOException If fails to write to DataOutputStream
+     */
+    public static void writeStringArray(DataOutputStream dataOutputStream, String[] values) throws IOException {
+        writeInt(dataOutputStream, values.length);
+        for (String value : values) {
+            writeString(dataOutputStream, value);
+        }
+    }
+
+    // --- Common message utility functions ---
+
+    /**
+     * Reads a string List from the DataInputStream passed in as follows:
+     * 1. Reads the array length as an integer n.
+     * 2. Allocates a string array of size n.
+     * 3. Iterates n times, reading a string each time into the string List.
+     *
+     * @param dataInputStream The DataInputStream containing the bytes we are reading.
+     * @throws IOException If fails to read from DataInputStream
+     */
+    public static List<String> readStringList(DataInputStream dataInputStream) throws IOException {
+        int count = readInt(dataInputStream);
+        List<String> list = new ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            list.add(readString(dataInputStream));
+        }
+        return list;
+    }
+
+    /**
+     * Writes a string List to the DataOutputString passed in as follows:
+     * 1. Writes the string List length (n) as an integer.
+     * 2. Iterates n times, writing a string from the List to the stream each time.
+     *
+     * @param dataOutputStream DataOutputStream containing the byte array we are writing to
+     * @param values           The String values we are writing to the byte array
+     * @throws IOException If fails to write to DataOutputStream
+     */
+    public static void writeStringList(DataOutputStream dataOutputStream, List<String> values) throws IOException {
+        writeInt(dataOutputStream, values.size());
+        for (String value : values) {
+            writeString(dataOutputStream, value);
+        }
+    }
+
+    /**
+     * Writes a Set of Strings to the output stream.
+     *
+     * @param dataOutputStream The DataOutputStream we are writing to.
+     * @param values           The Set<String> we are writing.
+     * @throws IOException If fails to write to DataOutputStream
+     */
+    public static void writeStringSet(DataOutputStream dataOutputStream, Set<String> values) throws IOException {
+        writeInt(dataOutputStream, values.size());
+        for (String value : values) {
+            writeString(dataOutputStream, value);
+        }
+    }
+
+    /**
+     * Reads a Set of Strings from the input stream.
+     *
+     * @param dataInputStream The DataInputStream we are reading from.
+     * @return The Set of Strings we read
+     * @throws IOException If fails to read from the DataInputStream
+     */
+    public static Set<String> readStringSet(DataInputStream dataInputStream) throws IOException {
+        int count = readInt(dataInputStream);
+        Set<String> values = new HashSet<>();
+        for (int i = 0; i < count; i++) {
+            values.add(readString(dataInputStream));
+        }
+        return values;
+    }
+
+    /**
+     * Converts an integer to a MessageType enum
+     *
+     * @param type integer type
+     * @return MessageType enum
+     */
+    public static MessageType typeFromInteger(int type) {
+        switch (type) {
+            case 0:
+                return MessageType.REGISTER_PEER_REQUEST;
+            case 1:
+                return MessageType.REGISTER_PEER_RESPONSE;
+            default:
+                return null;
+        }
+    }
+
+    // --- Static helper functions ---
+
+    /**
+     * Converts a MessageType enum to an integer
+     *
+     * @param type MessageType enum
+     * @return integer type
+     */
+    public static Integer integerFromType(MessageType type) {
+        if (type == null) {
+            throw new NullPointerException("MessageType cannot be null!");
+        }
+        switch (type) {
+            case REGISTER_PEER_REQUEST:
+                return 0;
+            case REGISTER_PEER_RESPONSE:
+                return 1;
+            default:
+                return -1;
+        }
+    }
 
     public abstract MessageType getType();
 
@@ -39,8 +225,6 @@ public abstract class Message {
     public byte[] getMarshaledBytes() {
         return marshaledBytes;
     }
-
-    // --- Common message utility functions ---
 
     @Override
     public boolean equals(Object other) {
@@ -119,193 +303,7 @@ public abstract class Message {
         this.marshaledBytes = byteOutStream.toByteArray();
     }
 
-    // --- Static helper functions ---
-
-    /**
-     * Writes an integer to the output stream.
-     *
-     * @param dataOutputStream The DataOutputStream we are writing to.
-     * @param value            The int we are writing.
-     * @throws IOException If fails to write to the DataOutputStream
-     */
-    public static void writeInt(DataOutputStream dataOutputStream, int value) throws IOException {
-        dataOutputStream.writeInt(value);
-    }
-
-    /**
-     * Reads and returns an integer to the input stream.
-     *
-     * @param dataInputStream The DataInputStream we are reading from.
-     * @return The int we read.
-     * @throws IOException If fails to read from the DataInputStream
-     */
-    public static int readInt(DataInputStream dataInputStream) throws IOException {
-        return dataInputStream.readInt();
-    }
-
-    /**
-     * Reads a string from the DataInputStream passed in as follows:
-     * 1. Reads the string length as an integer.
-     * 2. Reads the string bytes; creates and returns a string from said bytes.
-     *
-     * @param dataInputStream The DataInputStream containing the bytes we are reading.
-     * @return The String, whose length is specified before the string bytes.
-     * @throws IOException If fails to read from DataInputStream
-     */
-    public static String readString(DataInputStream dataInputStream) throws IOException {
-        int stringLength = dataInputStream.readInt();
-        byte[] stringBytes = new byte[stringLength];
-        dataInputStream.readFully(stringBytes, 0, stringLength);
-        return new String(stringBytes);
-    }
-
-    /**
-     * Writes a string to the DataOutputString passed in as follows:
-     * 1. Writes the string length as an integer
-     * 2. Writes the string bytes
-     *
-     * @param dataOutputStream DataOutputStream containing the byte array we are writing to
-     * @param value            The String value we are writing to the byte array
-     * @throws IOException If fails to write to DataOutputStream
-     */
-    public static void writeString(DataOutputStream dataOutputStream, String value) throws IOException {
-        dataOutputStream.writeInt(value.length());
-        dataOutputStream.writeBytes(value);
-    }
-
-    /**
-     * Reads a string array from the DataInputStream passed in as follows:
-     * 1. Reads the array length as an integer n.
-     * 2. Allocates a string array of size n.
-     * 3. Iterates n times, reading a string each time into the string array.
-     *
-     * @param dataInputStream The DataInputStream containing the bytes we are reading.
-     * @throws IOException If fails to read from DataInputStream
-     */
-    public static String[] readStringArray(DataInputStream dataInputStream) throws IOException {
-        int count = readInt(dataInputStream);
-        String[] array = new String[count];
-        for (int i = 0; i < count; i++) {
-            array[i] = readString(dataInputStream);
-        }
-        return array;
-    }
-
-    /**
-     * Writes a string array to the DataOutputString passed in as follows:
-     * 1. Writes the string array length (n) as an integer.
-     * 2. Iterates n times, writing a string from the array to the stream each time.
-     *
-     * @param dataOutputStream DataOutputStream containing the byte array we are writing to
-     * @param values           The String values we are writing to the byte array
-     * @throws IOException If fails to write to DataOutputStream
-     */
-    public static void writeStringArray(DataOutputStream dataOutputStream, String[] values) throws IOException {
-        writeInt(dataOutputStream, values.length);
-        for (String value : values) {
-            writeString(dataOutputStream, value);
-        }
-    }
-
-    /**
-     * Reads a string List from the DataInputStream passed in as follows:
-     * 1. Reads the array length as an integer n.
-     * 2. Allocates a string array of size n.
-     * 3. Iterates n times, reading a string each time into the string List.
-     *
-     * @param dataInputStream The DataInputStream containing the bytes we are reading.
-     * @throws IOException If fails to read from DataInputStream
-     */
-    public static List<String> readStringList(DataInputStream dataInputStream) throws IOException {
-        int count = readInt(dataInputStream);
-        List<String> list = new ArrayList<>(count);
-        for (int i = 0; i < count; i++) {
-            list.add(readString(dataInputStream));
-        }
-        return list;
-    }
-
-    /**
-     * Writes a string List to the DataOutputString passed in as follows:
-     * 1. Writes the string List length (n) as an integer.
-     * 2. Iterates n times, writing a string from the List to the stream each time.
-     *
-     * @param dataOutputStream DataOutputStream containing the byte array we are writing to
-     * @param values           The String values we are writing to the byte array
-     * @throws IOException If fails to write to DataOutputStream
-     */
-    public static void writeStringList(DataOutputStream dataOutputStream, List<String> values) throws IOException {
-        writeInt(dataOutputStream, values.size());
-        for (String value : values) {
-            writeString(dataOutputStream, value);
-        }
-    }
-
-    /**
-     * Writes a Set of Strings to the output stream.
-     *
-     * @param dataOutputStream The DataOutputStream we are writing to.
-     * @param values           The Set<String> we are writing.
-     * @throws IOException If fails to write to DataOutputStream
-     */
-    public static void writeStringSet(DataOutputStream dataOutputStream, Set<String> values) throws IOException {
-        writeInt(dataOutputStream, values.size());
-        for (String value : values) {
-            writeString(dataOutputStream, value);
-        }
-    }
-
-    /**
-     * Reads a Set of Strings from the input stream.
-     *
-     * @param dataInputStream The DataInputStream we are reading from.
-     * @return The Set of Strings we read
-     * @throws IOException If fails to read from the DataInputStream
-     */
-    public static Set<String> readStringSet(DataInputStream dataInputStream) throws IOException {
-        int count = readInt(dataInputStream);
-        Set<String> values = new HashSet<>();
-        for (int i = 0; i < count; i++) {
-            values.add(readString(dataInputStream));
-        }
-        return values;
-    }
-
-
-    /**
-     * Converts an integer to a MessageType enum
-     *
-     * @param type integer type
-     * @return MessageType enum
-     */
-    public static MessageType typeFromInteger(int type) {
-        switch (type) {
-            case 0:
-                return MessageType.REGISTER_PEER_REQUEST;
-            case 1:
-                return MessageType.REGISTER_PEER_RESPONSE;
-            default:
-                return null;
-        }
-    }
-
-    /**
-     * Converts a MessageType enum to an integer
-     *
-     * @param type MessageType enum
-     * @return integer type
-     */
-    public static Integer integerFromType(MessageType type) {
-        if (type == null) {
-            throw new NullPointerException("MessageType cannot be null!");
-        }
-        switch (type) {
-            case REGISTER_PEER_REQUEST:
-                return 0;
-            case REGISTER_PEER_RESPONSE:
-                return 1;
-            default:
-                return -1;
-        }
+    public enum MessageType {
+        REGISTER_PEER_REQUEST, REGISTER_PEER_RESPONSE
     }
 }

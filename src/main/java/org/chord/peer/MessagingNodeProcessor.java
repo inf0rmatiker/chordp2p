@@ -1,4 +1,4 @@
-package org.chord.messagingNode;
+package org.chord.peer;
 
 import org.chord.messaging.Message;
 import org.chord.networking.Processor;

@@ -1,4 +1,4 @@
-package org.chord.messagingNode;
+package org.chord.peer;
 
 import org.chord.networking.Client;
 import org.slf4j.Logger;

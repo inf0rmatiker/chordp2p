@@ -10,10 +10,16 @@ import java.util.List;
 import java.util.Set;
 
 public abstract class Message {
+
     private static final Logger log = LoggerFactory.getLogger(Message.class);
+
     public String hostname, ipAddress;
     public Integer port;
     public byte[] marshaledBytes;
+
+    public enum MessageType {
+        REGISTER_PEER_REQUEST, REGISTER_PEER_RESPONSE
+    }
 
     /**
      * Writes an integer to the output stream.
@@ -25,8 +31,6 @@ public abstract class Message {
     public static void writeInt(DataOutputStream dataOutputStream, int value) throws IOException {
         dataOutputStream.writeInt(value);
     }
-
-    // --- Getters ---
 
     /**
      * Reads and returns an integer to the input stream.
@@ -102,8 +106,6 @@ public abstract class Message {
             writeString(dataOutputStream, value);
         }
     }
-
-    // --- Common message utility functions ---
 
     /**
      * Reads a string List from the DataInputStream passed in as follows:
@@ -301,9 +303,5 @@ public abstract class Message {
             throws IOException {
         dataOutStream.flush();
         this.marshaledBytes = byteOutStream.toByteArray();
-    }
-
-    public enum MessageType {
-        REGISTER_PEER_REQUEST, REGISTER_PEER_RESPONSE
     }
 }

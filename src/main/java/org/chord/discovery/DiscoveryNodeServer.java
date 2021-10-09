@@ -1,4 +1,4 @@
-package org.chord.discoveryNode;
+package org.chord.discovery;
 
 import org.chord.networking.Processor;
 import org.chord.networking.Server;

@@ -2,8 +2,8 @@ package org.chord;
 
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
-import org.chord.discoveryNode.DiscoveryNode;
-import org.chord.messagingNode.MessagingNode;
+import org.chord.discovery.DiscoveryNode;
+import org.chord.peer.MessagingNode;
 import org.chord.utils.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

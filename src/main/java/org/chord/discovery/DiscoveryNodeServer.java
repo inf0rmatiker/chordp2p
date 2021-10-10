@@ -1,8 +1,8 @@
-package org.chord.discoveryNode;
+package org.chord.discovery;
 
 import org.chord.networking.Processor;
 import org.chord.networking.Server;
-import org.chord.utils.Constants;
+import org.chord.util.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

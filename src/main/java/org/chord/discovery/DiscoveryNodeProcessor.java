@@ -1,4 +1,4 @@
-package org.chord.discoveryNode;
+package org.chord.discovery;
 
 import org.chord.messaging.Message;
 import org.chord.messaging.RegisterPeerRequest;

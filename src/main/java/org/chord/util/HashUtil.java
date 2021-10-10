@@ -1,4 +1,4 @@
-package org.chord.utils;
+package org.chord.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +12,7 @@ public class HashUtil {
      * @param buf
      * @return
      */
-    public String convertBytesToHex(byte[] buf) {
+    public static String bytesToHex(byte[] buf) {
         StringBuffer strBuf = new StringBuffer();
         for (int i = 0; i < buf.length; i++) {
             int byteValue = (int) buf[i] & 0xff;
@@ -30,7 +30,7 @@ public class HashUtil {
      * @param hexString
      * @return
      */
-    public byte[] convertHexToBytes(String hexString) {
+    public static byte[] hexToBytes(String hexString) {
         int size = hexString.length();
         byte[] buf = new byte[size / 2];
         int j = 0;
@@ -42,5 +42,14 @@ public class HashUtil {
             j++;
         }
         return buf;
+    }
+
+    /**
+     * Converts a hex string to an int for comparison.
+     * @param hex 4-character String hex value, i.e. "3dcf"
+     * @return Integer representation of that value
+     */
+    public static Integer hexToInt(String hex) {
+        return Integer.parseInt(hex, 16);
     }
 }

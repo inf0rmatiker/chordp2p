@@ -12,10 +12,9 @@ public class RegisterPeerRequest extends Message {
 
     private String id;
 
-    public RegisterPeerRequest(String hostname, String ipAddress, int port, String id) {
+    public RegisterPeerRequest(String hostname, String ipAddress, String id) {
         this.hostname = hostname;
         this.ipAddress = ipAddress;
-        this.port = port;
         this.id = id;
         try {
             marshal();
@@ -37,7 +36,7 @@ public class RegisterPeerRequest extends Message {
     @Override
     public void unmarshal(DataInputStream dataInputStream) throws IOException {
         super.unmarshal(dataInputStream);
-        id = readString(dataInputStream);
+        this.id = readString(dataInputStream);
     }
 
     @Override
@@ -47,5 +46,20 @@ public class RegisterPeerRequest extends Message {
 
     public String getId() {
         return id;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null) return false;
+        if (this == o) return true;
+        if (!(o instanceof RegisterPeerRequest)) return false;
+        RegisterPeerRequest rprOther = (RegisterPeerRequest) o;
+        return this.id.equals(rprOther.getId());
+    }
+
+    @Override
+    public String toString() {
+        return "RegisterPeerRequest:\n" +
+                String.format("\tid: %s\n", this.id);
     }
 }

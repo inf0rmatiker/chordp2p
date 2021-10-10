@@ -7,12 +7,13 @@ import org.slf4j.LoggerFactory;
 
 import java.net.Socket;
 
-public class MessagingNodeProcessor extends Processor {
-    private static final Logger log = LoggerFactory.getLogger(MessagingNodeProcessor.class);
+public class PeerProcessor extends Processor {
 
-    private final MessagingNode messagingNode;
+    private static final Logger log = LoggerFactory.getLogger(PeerProcessor.class);
 
-    public MessagingNodeProcessor(Socket socket, MessagingNode messagingNode) {
+    private final Peer messagingNode;
+
+    public PeerProcessor(Socket socket, Peer messagingNode) {
         this.socket = socket;
         this.messagingNode = messagingNode;
     }
@@ -22,7 +23,7 @@ public class MessagingNodeProcessor extends Processor {
 
     }
 
-    public MessagingNode getMessagingNode() {
+    public Peer getMessagingNode() {
         return messagingNode;
     }
 }

@@ -3,6 +3,7 @@ package org.chord.messaging;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.crypto.Data;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -14,11 +15,24 @@ public abstract class Message {
     private static final Logger log = LoggerFactory.getLogger(Message.class);
 
     public String hostname, ipAddress;
-    public Integer port;
     public byte[] marshaledBytes;
 
     public enum MessageType {
         REGISTER_PEER_REQUEST, REGISTER_PEER_RESPONSE
+    }
+
+    public abstract MessageType getType();
+
+    public String getHostname() {
+        return hostname;
+    }
+
+    public String getIpAddress() {
+        return ipAddress;
+    }
+
+    public byte[] getMarshaledBytes() {
+        return marshaledBytes;
     }
 
     /**
@@ -41,6 +55,28 @@ public abstract class Message {
      */
     public static int readInt(DataInputStream dataInputStream) throws IOException {
         return dataInputStream.readInt();
+    }
+
+    /**
+     * Writes a boolean to the output stream.
+     *
+     * @param dataOutputStream The DataOutputStream we are writing to.
+     * @param value            The boolean we are writing.
+     * @throws IOException If fails to write to the DataOutputStream
+     */
+    public static void writeBoolean(DataOutputStream dataOutputStream, boolean value) throws IOException {
+        dataOutputStream.writeBoolean(value);
+    }
+
+    /**
+     * Reads and returns a boolean from the input stream.
+     *
+     * @param dataInputStream The DataInputStream we are reading from.
+     * @return The boolean we read.
+     * @throws IOException If fails to read from the DataInputStream
+     */
+    public static boolean readBoolean(DataInputStream dataInputStream) throws IOException {
+        return dataInputStream.readBoolean();
     }
 
     /**
@@ -188,8 +224,6 @@ public abstract class Message {
         }
     }
 
-    // --- Static helper functions ---
-
     /**
      * Converts a MessageType enum to an integer
      *
@@ -210,23 +244,7 @@ public abstract class Message {
         }
     }
 
-    public abstract MessageType getType();
 
-    public String getHostname() {
-        return hostname;
-    }
-
-    public String getIpAddress() {
-        return ipAddress;
-    }
-
-    public Integer getPort() {
-        return port;
-    }
-
-    public byte[] getMarshaledBytes() {
-        return marshaledBytes;
-    }
 
     @Override
     public boolean equals(Object other) {
@@ -235,8 +253,7 @@ public abstract class Message {
         Message otherMessage = (Message) other;
         return (this.getType().equals(otherMessage.getType()) &&
                 this.getHostname().equals(otherMessage.getHostname()) &&
-                this.getIpAddress().equals(otherMessage.getIpAddress()) &&
-                this.getPort().equals(otherMessage.getPort())
+                this.getIpAddress().equals(otherMessage.getIpAddress())
         );
     }
 
@@ -249,7 +266,6 @@ public abstract class Message {
      * - hostname string (char[] n bytes)
      * - ip length (int 4 bytes)
      * - ip string (char[] n bytes)
-     * - port (int 4 bytes)
      *
      * @param dataOutputStream The DataOutputStream we are writing to.
      */
@@ -257,7 +273,6 @@ public abstract class Message {
         dataOutputStream.writeInt(integerFromType(this.getType()));
         writeString(dataOutputStream, this.hostname);
         writeString(dataOutputStream, this.ipAddress);
-        dataOutputStream.writeInt(this.port);
     }
 
     /**
@@ -281,14 +296,12 @@ public abstract class Message {
      * - hostname string (char[] n bytes)
      * - ip length (int 4 bytes)
      * - ip string (char[] n bytes)
-     * - port (int 4 bytes)
      *
      * @throws IOException If fails to read from DataInputStream
      */
     public void unmarshal(DataInputStream dataInputStream) throws IOException {
         this.hostname = readString(dataInputStream);
         this.ipAddress = readString(dataInputStream);
-        this.port = dataInputStream.readInt();
     }
 
     /**

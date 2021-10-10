@@ -1,4 +1,4 @@
-package org.chord.utils;
+package org.chord.util;
 
 public class Constants {
     public static class DiscoveryNode {

@@ -1,7 +1,16 @@
 package org.chord.peer;
 
+import org.chord.messaging.MessageFactory;
+import org.chord.messaging.RegisterPeerRequest;
+import org.chord.messaging.RegisterPeerResponse;
+import org.chord.networking.Client;
+import org.chord.util.Host;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.net.Socket;
 
 public class Peer {
     private static final Logger log = LoggerFactory.getLogger(Peer.class);
@@ -38,6 +47,31 @@ public class Peer {
      *     - If request rejected, we retry with a different proposed id
      */
     public void joinNetwork() {
+        RegisterPeerRequest registerRequest = new RegisterPeerRequest(Host.getHostname(), Host.getIpAddress(), this.id);
+        RegisterPeerResponse response = null;
+        try {
+            // Send registration request, wait for response
+            Socket clientSocket = Client.sendMessage(this.discoveryNodeHostname, this.discoveryNodePort, registerRequest);
+            DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream());
+            response = (RegisterPeerResponse) MessageFactory.getInstance().createMessage(dataInputStream);
+
+            if (response.getIsValidRequest()) {
+                String peerHost = response.getRandomPeerHost();
+
+                /* TODO:
+                    Contact random peer and get successor/predecessor node info.
+                    Contact successor and update/set self as its predecessor.
+                    Contact predecessor and update/set self as its successor.
+                    Initiate migration of data items > predecessor and <= self id
+                 */
+            } else {
+                // TODO: Generate new id and retry
+            }
+
+            clientSocket.close();
+        } catch (IOException e) {
+            log.error("Unable to send registration request: {}", e.getMessage());
+        }
 
     }
 

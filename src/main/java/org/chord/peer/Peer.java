@@ -18,14 +18,14 @@ public class Peer {
     private final int discoveryNodePort;
 
     private FingerTable fingerTable;
-    private String id;
+    private Identifier identifier;
     private Identifier predecessor;
     private Identifier successor;
 
-    public Peer(String discoveryNodeHostname, int discoveryNodePort, String id) {
+    public Peer(String discoveryNodeHostname, int discoveryNodePort, Identifier identifier) {
         this.discoveryNodeHostname = discoveryNodeHostname;
         this.discoveryNodePort = discoveryNodePort;
-        this.fingerTable = new FingerTable(id);
+        this.fingerTable = new FingerTable(this.identifier);
     }
 
     public String getHostname() {
@@ -48,7 +48,13 @@ public class Peer {
      *     - If request rejected, we retry with a different proposed id
      */
     public void joinNetwork() {
-        RegisterPeerRequest registerRequest = new RegisterPeerRequest(Host.getHostname(), Host.getIpAddress(), this.id);
+
+        RegisterPeerRequest registerRequest = new RegisterPeerRequest(
+                Host.getHostname(),
+                Host.getIpAddress(),
+                this.identifier.getId()
+        );
+
         try {
 
             // Send registration request to discovery node, wait for response
@@ -59,7 +65,7 @@ public class Peer {
             if (rprResponse.getIsValidRequest()) {
 
                 // We are the first node in the network
-                if (rprResponse.getRandomPeerId().equals(this.id)) {
+                if (rprResponse.getRandomPeerId().equals(this.identifier)) {
 
                     // TODO: We are first node in network
 
@@ -78,7 +84,7 @@ public class Peer {
                     GetPredecessorRequest predecessorRequest = new GetPredecessorRequest(
                             Host.getHostname(),
                             Host.getIpAddress(),
-                            this.id
+                            this.identifier.getId()
                     );
                     Socket peerSocket = Client.sendMessage(randomPeerHost, Constants.Peer.PORT, predecessorRequest);
                     dataInputStream = new DataInputStream(peerSocket.getInputStream());
@@ -91,7 +97,7 @@ public class Peer {
                     GetSuccessorRequest successorRequest = new GetSuccessorRequest(
                             Host.getHostname(),
                             Host.getIpAddress(),
-                            this.id
+                            this.identifier.getId()
                     );
                     peerSocket = Client.sendMessage(randomPeerHost, Constants.Peer.PORT, predecessorRequest);
                     dataInputStream = new DataInputStream(peerSocket.getInputStream());

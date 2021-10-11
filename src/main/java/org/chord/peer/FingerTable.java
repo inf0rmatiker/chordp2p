@@ -10,21 +10,21 @@ public class FingerTable {
 
     private static final Logger log = LoggerFactory.getLogger(FingerTable.class);
 
-    public String id;
+    public Identifier identifier;
     public List<Identifier> peerIds;
 
-    public FingerTable(String id) {
-        this.id = id;
+    public FingerTable(Identifier id) {
+        this.identifier = id;
         this.peerIds = new ArrayList<>(16);
     }
 
-    public FingerTable(String id, List<Identifier> peerIds) {
-        this.id = id;
+    public FingerTable(Identifier id, List<Identifier> peerIds) {
+        this.identifier = id;
         this.peerIds = peerIds;
     }
 
-    public String getId() {
-        return id;
+    public Identifier getIdentifier() {
+        return identifier;
     }
 
     public List<Identifier> getPeerIds() {
@@ -34,7 +34,7 @@ public class FingerTable {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("FingerTable:\n");
-        sb.append(String.format("\tid: %s\n", this.id));
+        sb.append(String.format("\tidentifier: %s\n", this.identifier));
         sb.append("\tpeerIds: [\n");
         for (Identifier peerId: this.peerIds) {
             sb.append(String.format("\t  %s\n", peerId));
@@ -49,7 +49,7 @@ public class FingerTable {
         if (this == o) return true;
         if (!(o instanceof FingerTable)) return false;
         FingerTable ftOther = (FingerTable) o;
-        return this.id.equals(ftOther.getId()) && this.peerIds.equals(ftOther.getPeerIds());
+        return this.identifier.equals(ftOther.getIdentifier()) && this.peerIds.equals(ftOther.getPeerIds());
     }
 
 }

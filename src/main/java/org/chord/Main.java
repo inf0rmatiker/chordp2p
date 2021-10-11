@@ -3,8 +3,10 @@ package org.chord;
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
 import org.chord.discovery.DiscoveryNode;
+import org.chord.peer.Identifier;
 import org.chord.peer.Peer;
 import org.chord.util.Constants;
+import org.chord.util.Host;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +57,7 @@ public class Main {
     }
 
     private static void startPeer(String discoveryNodeHostname, String id) {
-        Peer messagingNode = new Peer(discoveryNodeHostname, Constants.DiscoveryNode.PORT, id);
+        Peer messagingNode = new Peer(discoveryNodeHostname, Constants.DiscoveryNode.PORT, new Identifier(Host.getHostname(), id));
         messagingNode.startServer();
     }
 

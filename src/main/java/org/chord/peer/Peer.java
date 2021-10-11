@@ -60,10 +60,8 @@ public class Peer {
 
                 // We are the first node in the network
                 if (rprResponse.getRandomPeerId().equals(this.id)) {
-
+                    log.info("First peer to join the network");
                     // TODO: We are first node in network
-
-
                 } else { // There are other nodes in the network
                     String randomPeerHost = rprResponse.getRandomPeerHost();
 
@@ -102,14 +100,13 @@ public class Peer {
                 }
             } else {
                 // TODO: Generate new id and retry
+                log.warn("Peer with ID {} already exists in the network", this.id);
             }
-
 
             clientSocket.close();
         } catch (IOException e) {
             log.error("Unable to send registration request: {}", e.getMessage());
         }
-
     }
 
     public void startServer() {

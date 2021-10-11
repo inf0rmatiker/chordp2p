@@ -64,16 +64,15 @@ public class Main {
     }
 
     private static void startPeer(String discoveryNodeHostname, String id) {
-        peer = new Peer(discoveryNodeHostname, Constants.DiscoveryNode.PORT, id);
+        peer = new Peer(discoveryNodeHostname, Constants.DiscoveryNode.PORT, new Identifier(Host.getHostname(), id));
         peer.startServer();
     }
 
     private static void printUsage() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Usage: Main [options]\n\n");
-        sb.append("  discovery-node\tstart discovery node for current machine\n");
-        sb.append("  peer\tstart peer node for current machine\n");
-        System.out.println(sb);
+        String usage = "Usage: Main [options]\n\n" +
+                "  discovery-node\tstart discovery node for current machine\n" +
+                "  peer\tstart peer node for current machine\n";
+        System.out.println(usage);
     }
 
     private static void startDiscoveryNode() {

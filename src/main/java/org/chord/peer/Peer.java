@@ -65,9 +65,11 @@ public class Peer {
             if (rprResponse.getIsValidRequest()) {
 
                 // We are the first node in the network
-                if (rprResponse.getRandomPeerId().equals(this.identifier)) {
+                if (rprResponse.getRandomPeerId().equals(this.identifier.getId())) {
+
                     log.info("First peer to join the network");
                     // TODO: We are first node in network
+
                 } else { // There are other nodes in the network
                     String randomPeerHost = rprResponse.getRandomPeerHost();
 
@@ -106,7 +108,7 @@ public class Peer {
                 }
             } else {
                 // TODO: Generate new id and retry
-                log.warn("Peer with ID {} already exists in the network", this.id);
+                log.warn("Peer with ID {} already exists in the network", this.identifier);
             }
 
             clientSocket.close();
@@ -117,7 +119,7 @@ public class Peer {
 
     public void leaveNetwork() {
         NetworkExitNotification exitNotification = new NetworkExitNotification(Host.getHostname(), Host.getIpAddress(),
-                new Identifier(Host.getHostname(), this.id));
+                new Identifier(Host.getHostname(), this.identifier.getId()));
         try {
             Socket clientSocket = Client.sendMessage(this.discoveryNodeHostname, this.discoveryNodePort, exitNotification);
             clientSocket.close();

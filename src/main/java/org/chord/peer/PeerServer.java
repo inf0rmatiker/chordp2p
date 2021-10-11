@@ -15,7 +15,7 @@ public class PeerServer extends Server {
 
     public PeerServer(Peer messagingNode) {
         this.messagingNode = messagingNode;
-        this.bindToPort(Constants.MessagingNode.PORT);
+        this.bindToPort(Constants.Peer.PORT);
     }
 
     @Override

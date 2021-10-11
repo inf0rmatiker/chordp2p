@@ -7,13 +7,14 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class RegisterPeerRequest extends Message {
+public class GetSuccessorRequest extends Message {
 
-    private static final Logger log = LoggerFactory.getLogger(RegisterPeerRequest.class);
+    private static final Logger log = LoggerFactory.getLogger(GetSuccessorRequest.class);
 
-    private String id;
+    // String hex identifier of either a node or data item
+    public String id;
 
-    public RegisterPeerRequest(String hostname, String ipAddress, String id) {
+    public GetSuccessorRequest(String hostname, String ipAddress, String id) {
         this.hostname = hostname;
         this.ipAddress = ipAddress;
         this.id = id;
@@ -24,8 +25,17 @@ public class RegisterPeerRequest extends Message {
         }
     }
 
-    public RegisterPeerRequest(DataInputStream dataInputStream) throws IOException {
+    public GetSuccessorRequest(DataInputStream dataInputStream) throws IOException {
         this.unmarshal(dataInputStream);
+    }
+
+    @Override
+    public MessageType getType() {
+        return MessageType.GET_SUCCESSOR_REQUEST;
+    }
+
+    public String getId() {
+        return id;
     }
 
     @Override
@@ -41,26 +51,17 @@ public class RegisterPeerRequest extends Message {
     }
 
     @Override
-    public MessageType getType() {
-        return MessageType.REGISTER_PEER_REQUEST;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (o == null) return false;
         if (this == o) return true;
-        if (!(o instanceof RegisterPeerRequest)) return false;
-        RegisterPeerRequest rprOther = (RegisterPeerRequest) o;
-        return this.id.equals(rprOther.getId());
+        if (!(o instanceof GetSuccessorRequest)) return false;
+        GetSuccessorRequest gsrOther = (GetSuccessorRequest) o;
+        return this.id.equals(gsrOther.getId());
     }
 
     @Override
     public String toString() {
-        return "RegisterPeerRequest:\n" +
+        return "GetSuccessorRequest:\n" +
                 String.format("\tid: %s\n", this.id);
     }
 }

@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 public class Main {
 
     private static final Logger log = LoggerFactory.getLogger(Main.class);
+    private static Peer peer;
 
     public static LongOpt[] generateValidOptions() {
         LongOpt[] longOpts = new LongOpt[2];
@@ -49,6 +50,8 @@ public class Main {
                     String[] peerArgs = getPeerArgs(g, args);
                     startPeer(peerArgs[0], peerArgs[1]);
                     break;
+                case 'e':
+                    stopPeer();
                 default:
                     printUsage();
                     System.exit(1);
@@ -56,9 +59,13 @@ public class Main {
         }
     }
 
+    private static void stopPeer() {
+        peer.leaveNetwork();
+    }
+
     private static void startPeer(String discoveryNodeHostname, String id) {
-        Peer messagingNode = new Peer(discoveryNodeHostname, Constants.DiscoveryNode.PORT, new Identifier(Host.getHostname(), id));
-        messagingNode.startServer();
+        peer = new Peer(discoveryNodeHostname, Constants.DiscoveryNode.PORT, id);
+        peer.startServer();
     }
 
     private static void printUsage() {

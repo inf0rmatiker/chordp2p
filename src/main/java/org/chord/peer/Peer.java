@@ -1,9 +1,8 @@
 package org.chord.peer;
 
-import org.chord.messaging.MessageFactory;
-import org.chord.messaging.RegisterPeerRequest;
-import org.chord.messaging.RegisterPeerResponse;
+import org.chord.messaging.*;
 import org.chord.networking.Client;
+import org.chord.util.Constants;
 import org.chord.util.Host;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +19,8 @@ public class Peer {
 
     private FingerTable fingerTable;
     private String id;
+    private Identifier predecessor;
+    private Identifier successor;
 
     public Peer(String discoveryNodeHostname, int discoveryNodePort, String id) {
         this.discoveryNodeHostname = discoveryNodeHostname;
@@ -48,25 +49,61 @@ public class Peer {
      */
     public void joinNetwork() {
         RegisterPeerRequest registerRequest = new RegisterPeerRequest(Host.getHostname(), Host.getIpAddress(), this.id);
-        RegisterPeerResponse response = null;
         try {
-            // Send registration request, wait for response
+
+            // Send registration request to discovery node, wait for response
             Socket clientSocket = Client.sendMessage(this.discoveryNodeHostname, this.discoveryNodePort, registerRequest);
             DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream());
-            response = (RegisterPeerResponse) MessageFactory.getInstance().createMessage(dataInputStream);
+            RegisterPeerResponse rprResponse = (RegisterPeerResponse) MessageFactory.getInstance().createMessage(dataInputStream);
 
-            if (response.getIsValidRequest()) {
-                String peerHost = response.getRandomPeerHost();
+            if (rprResponse.getIsValidRequest()) {
 
-                /* TODO:
-                    Contact random peer and get successor/predecessor node info.
-                    Contact successor and update/set self as its predecessor.
-                    Contact predecessor and update/set self as its successor.
-                    Initiate migration of data items > predecessor and <= self id
-                 */
+                // We are the first node in the network
+                if (rprResponse.getRandomPeerId().equals(this.id)) {
+
+                    // TODO: We are first node in network
+
+
+                } else { // There are other nodes in the network
+                    String randomPeerHost = rprResponse.getRandomPeerHost();
+
+                    /* TODO:
+                        Contact random peer and get successor/predecessor node info.
+                        Contact successor and update/set self as its predecessor.
+                        Contact predecessor and update/set self as its successor.
+                        Initiate migration of data items > predecessor and <= self id
+                     */
+
+                    // Request peer Identifier of predecessor node
+                    GetPredecessorRequest predecessorRequest = new GetPredecessorRequest(
+                            Host.getHostname(),
+                            Host.getIpAddress(),
+                            this.id
+                    );
+                    Socket peerSocket = Client.sendMessage(randomPeerHost, Constants.Peer.PORT, predecessorRequest);
+                    dataInputStream = new DataInputStream(peerSocket.getInputStream());
+                    GetPredecessorResponse gprResponse = (GetPredecessorResponse) MessageFactory.getInstance()
+                            .createMessage(dataInputStream);
+                    peerSocket.close();
+                    this.predecessor = gprResponse.getPeerId();
+
+                    // Request peer Identifier of successor node
+                    GetSuccessorRequest successorRequest = new GetSuccessorRequest(
+                            Host.getHostname(),
+                            Host.getIpAddress(),
+                            this.id
+                    );
+                    peerSocket = Client.sendMessage(randomPeerHost, Constants.Peer.PORT, predecessorRequest);
+                    dataInputStream = new DataInputStream(peerSocket.getInputStream());
+                    GetSuccessorResponse gsr = (GetSuccessorResponse) MessageFactory.getInstance()
+                            .createMessage(dataInputStream);
+                    peerSocket.close();
+                    this.successor = gsr.getPeerId();
+                }
             } else {
                 // TODO: Generate new id and retry
             }
+
 
             clientSocket.close();
         } catch (IOException e) {

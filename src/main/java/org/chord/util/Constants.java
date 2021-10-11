@@ -5,7 +5,7 @@ public class Constants {
         public static final int PORT = 9000;
     }
 
-    public static class MessagingNode {
+    public static class Peer {
         public static final int PORT = 9001;
     }
 }

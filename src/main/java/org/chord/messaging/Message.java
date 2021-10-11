@@ -1,5 +1,6 @@
 package org.chord.messaging;
 
+import org.chord.peer.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +19,8 @@ public abstract class Message {
     public byte[] marshaledBytes;
 
     public enum MessageType {
-        REGISTER_PEER_REQUEST, REGISTER_PEER_RESPONSE
+        REGISTER_PEER_REQUEST, REGISTER_PEER_RESPONSE, PEER_IDENTIFIER_MESSAGE, GET_PREDECESSOR_REQUEST, GET_PREDECESSOR_RESPONSE,
+        GET_SUCCESSOR_REQUEST, GET_SUCCESSOR_RESPONSE, NETWORK_JOIN_NOTIFICATION
     }
 
     public abstract MessageType getType();
@@ -208,6 +210,58 @@ public abstract class Message {
     }
 
     /**
+     * Writes a peer Identifier object to the DataOutputStream
+     * @param dataOutputStream The DataOutputStream we are writing to.
+     * @param value Peer Identifier object containing id and hostname
+     * @throws IOException If fails to write to DataOutputStream
+     */
+    public static void writeIdentifier(DataOutputStream dataOutputStream, Identifier value) throws IOException {
+        writeString(dataOutputStream, value.getId());
+        writeString(dataOutputStream, value.getHostname());
+    }
+
+    /**
+     * Reads a peer Identifier object from the DataInputStream
+     * @param dataInputStream The DataInputStream we are reading from.
+     * @return A peer's Identifier object, containing id and hostname
+     * @throws IOException If fails to read from the DataInputStream
+     */
+    public static Identifier readIdentifier(DataInputStream dataInputStream) throws IOException {
+        String peerId = readString(dataInputStream);
+        String peerHostname = readString(dataInputStream);
+        return new Identifier(peerHostname, peerId);
+    }
+
+    /**
+     * Writes a List of peer Identifier object to the DataOutputStream
+     * @param dataOutputStream The DataOutputStream we are writing to.
+     * @param values Peer Identifier objects containing ids and hostnames
+     * @throws IOException If fails to write to DataOutputStream
+     */
+    public static void writeIdentifierList(DataOutputStream dataOutputStream, List<Identifier> values)
+            throws IOException {
+        writeInt(dataOutputStream, values.size());
+        for (Identifier value: values) {
+            writeIdentifier(dataOutputStream, value);
+        }
+    }
+
+    /**
+     * Reads a List of peer Identifier objects from the DataInputStream
+     * @param dataInputStream The DataInputStream we are reading from.
+     * @return A List of peer Identifier objects, containing ids and hostnames
+     * @throws IOException If fails to read from the DataInputStream
+     */
+    public static List<Identifier> readIdentifierList(DataInputStream dataInputStream) throws IOException {
+        int count = readInt(dataInputStream);
+        List<Identifier> values = new ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            values.add(readIdentifier(dataInputStream));
+        }
+        return values;
+    }
+
+    /**
      * Converts an integer to a MessageType enum
      *
      * @param type integer type
@@ -215,12 +269,15 @@ public abstract class Message {
      */
     public static MessageType typeFromInteger(int type) {
         switch (type) {
-            case 0:
-                return MessageType.REGISTER_PEER_REQUEST;
-            case 1:
-                return MessageType.REGISTER_PEER_RESPONSE;
-            default:
-                return null;
+            case 0: return MessageType.REGISTER_PEER_REQUEST;
+            case 1: return MessageType.REGISTER_PEER_RESPONSE;
+            case 2: return MessageType.PEER_IDENTIFIER_MESSAGE;
+            case 3: return MessageType.GET_PREDECESSOR_REQUEST;
+            case 4: return MessageType.GET_PREDECESSOR_RESPONSE;
+            case 5: return MessageType.GET_SUCCESSOR_REQUEST;
+            case 6: return MessageType.GET_SUCCESSOR_RESPONSE;
+            case 7: return MessageType.NETWORK_JOIN_NOTIFICATION;
+            default: return null;
         }
     }
 
@@ -235,12 +292,15 @@ public abstract class Message {
             throw new NullPointerException("MessageType cannot be null!");
         }
         switch (type) {
-            case REGISTER_PEER_REQUEST:
-                return 0;
-            case REGISTER_PEER_RESPONSE:
-                return 1;
-            default:
-                return -1;
+            case REGISTER_PEER_REQUEST: return 0;
+            case REGISTER_PEER_RESPONSE: return 1;
+            case PEER_IDENTIFIER_MESSAGE: return 2;
+            case GET_PREDECESSOR_REQUEST: return 3;
+            case GET_PREDECESSOR_RESPONSE: return 4;
+            case GET_SUCCESSOR_REQUEST: return 5;
+            case GET_SUCCESSOR_RESPONSE: return 6;
+            case NETWORK_JOIN_NOTIFICATION: return 7;
+            default: return -1;
         }
     }
 

@@ -11,14 +11,14 @@ public class FingerTable {
     private static final Logger log = LoggerFactory.getLogger(FingerTable.class);
 
     public String id;
-    public List<String> peerIds;
+    public List<Identifier> peerIds;
 
     public FingerTable(String id) {
         this.id = id;
         this.peerIds = new ArrayList<>(16);
     }
 
-    public FingerTable(String id, List<String> peerIds) {
+    public FingerTable(String id, List<Identifier> peerIds) {
         this.id = id;
         this.peerIds = peerIds;
     }
@@ -27,7 +27,7 @@ public class FingerTable {
         return id;
     }
 
-    public List<String> getPeerIds() {
+    public List<Identifier> getPeerIds() {
         return peerIds;
     }
 
@@ -36,7 +36,7 @@ public class FingerTable {
         StringBuilder sb = new StringBuilder("FingerTable:\n");
         sb.append(String.format("\tid: %s\n", this.id));
         sb.append("\tpeerIds: [\n");
-        for (String peerId: this.peerIds) {
+        for (Identifier peerId: this.peerIds) {
             sb.append(String.format("\t  %s\n", peerId));
         }
         sb.append("\t]\n");

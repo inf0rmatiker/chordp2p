@@ -2,7 +2,7 @@ package org.chord.discovery;
 
 import org.chord.messaging.Message;
 import org.chord.messaging.NetworkJoinNotification;
-import org.chord.messaging.PeerExitNotification;
+import org.chord.messaging.NetworkExitNotification;
 import org.chord.messaging.RegisterPeerRequest;
 import org.chord.messaging.RegisterPeerResponse;
 import org.chord.networking.Processor;
@@ -40,15 +40,15 @@ public class DiscoveryNodeProcessor extends Processor {
             case NETWORK_JOIN_NOTIFICATION:
                 processNetworkJoinNotification((NetworkJoinNotification) message);
                 break;
-            case PEER_EXIT_NOTIFICATION:
-                processPeerExitNotification((PeerExitNotification) message);
+            case NETWORK_EXIT_NOTIFICATION:
+                processPeerExitNotification((NetworkExitNotification) message);
                 break;
             default:
                 log.error("Unimplemented Message type: \"{}\"", message.getType());
         }
     }
 
-    private void processPeerExitNotification(PeerExitNotification message) {
+    private void processPeerExitNotification(NetworkExitNotification message) {
         String id = message.getPeerId().id;
         if (registeredPeers.containsKey(id)) {
             registeredPeers.remove(id);

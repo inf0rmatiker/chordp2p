@@ -4,7 +4,6 @@ import org.chord.peer.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.crypto.Data;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -21,7 +20,7 @@ public abstract class Message {
     public enum MessageType {
         REGISTER_PEER_REQUEST, REGISTER_PEER_RESPONSE, PEER_IDENTIFIER_MESSAGE, GET_PREDECESSOR_REQUEST,
         GET_PREDECESSOR_RESPONSE, GET_SUCCESSOR_REQUEST, GET_SUCCESSOR_RESPONSE, NETWORK_JOIN_NOTIFICATION,
-        PEER_EXIT_NOTIFICATION
+        NETWORK_EXIT_NOTIFICATION
     }
 
     public abstract MessageType getType();
@@ -278,7 +277,7 @@ public abstract class Message {
             case 5: return MessageType.GET_SUCCESSOR_REQUEST;
             case 6: return MessageType.GET_SUCCESSOR_RESPONSE;
             case 7: return MessageType.NETWORK_JOIN_NOTIFICATION;
-            case 8: return MessageType.PEER_EXIT_NOTIFICATION;
+            case 8: return MessageType.NETWORK_EXIT_NOTIFICATION;
             default: return null;
         }
     }
@@ -302,7 +301,7 @@ public abstract class Message {
             case GET_SUCCESSOR_REQUEST: return 5;
             case GET_SUCCESSOR_RESPONSE: return 6;
             case NETWORK_JOIN_NOTIFICATION: return 7;
-            case PEER_EXIT_NOTIFICATION: return 8;
+            case NETWORK_EXIT_NOTIFICATION: return 8;
             default: return -1;
         }
     }

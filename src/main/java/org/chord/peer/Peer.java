@@ -110,7 +110,7 @@ public class Peer {
     }
 
     public void leaveNetwork() {
-        PeerExitNotification exitNotification = new PeerExitNotification(Host.getHostname(), Host.getIpAddress(),
+        NetworkExitNotification exitNotification = new NetworkExitNotification(Host.getHostname(), Host.getIpAddress(),
                 new Identifier(Host.getHostname(), this.id));
         try {
             Socket clientSocket = Client.sendMessage(this.discoveryNodeHostname, this.discoveryNodePort, exitNotification);

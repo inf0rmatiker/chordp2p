@@ -108,14 +108,14 @@ public class FingerTable {
 
                 // If the ring position of the FT index is the same as the requested id, return that successor
                 if (i == k) {
-                    return peerIds.get(i);
+                    return peerIds.get(ftIndex);
                 }
 
                 // If we overshot k and landed further in the ring,
                 // or if we overshot k and landed past the wrapping point
                 // which would be before us
                 if ( i > k || i < us ) {
-                    return peerIds.get(i-1);
+                    return peerIds.get(ftIndex-1);
                 }
             }
 
@@ -128,7 +128,7 @@ public class FingerTable {
 
                 // If the ring position of the FT index is the same as the requested id, return that successor
                 if (i == k) {
-                    return peerIds.get(i);
+                    return peerIds.get(ftIndex);
                 }
 
                 // i > k at two parts of the ring:
@@ -136,7 +136,7 @@ public class FingerTable {
                 // 2: after we wrap, but after we've overshot k
                 // Choose the latter, which means i < us
                 if ( i > k && i < us ) {
-                    return peerIds.get(i-1);
+                    return peerIds.get(ftIndex-1);
                 }
             }
         }

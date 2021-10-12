@@ -25,7 +25,8 @@ public class Peer {
     public Peer(String discoveryNodeHostname, int discoveryNodePort, Identifier identifier) {
         this.discoveryNodeHostname = discoveryNodeHostname;
         this.discoveryNodePort = discoveryNodePort;
-        this.fingerTable = new FingerTable(this.identifier);
+        this.identifier = identifier;
+        this.fingerTable = new FingerTable(Constants.FINGER_TABLE_SIZE, identifier);
     }
 
     public String getHostname() {
@@ -117,17 +118,24 @@ public class Peer {
         }
     }
 
+    /**
+     * Sends a NetworkExitNotification Message to the Discovery node before exiting the network.
+     * This allows the Discovery node to remove us from the list of tracked peers.
+     */
     public void leaveNetwork() {
         NetworkExitNotification exitNotification = new NetworkExitNotification(Host.getHostname(), Host.getIpAddress(),
-                new Identifier(Host.getHostname(), this.identifier.getId()));
+                this.identifier);
         try {
             Socket clientSocket = Client.sendMessage(this.discoveryNodeHostname, this.discoveryNodePort, exitNotification);
             clientSocket.close();
         } catch (IOException e) {
-            log.error("Unable to send PeerExitNotification: {}", e.getLocalizedMessage());
+            log.error("Unable to send NetworkExitNotification: {}", e.getLocalizedMessage());
         }
     }
 
+    /**
+     * Launches the Peer server as a thread.
+     */
     public void startServer() {
         new PeerServer(this).launchAsThread();
     }

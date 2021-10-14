@@ -13,4 +13,8 @@ public class Constants {
     public static class Peer {
         public static final int PORT = 9001;
     }
+
+    public static class StoreData {
+        public static final int PORT = 9002;
+    }
 }

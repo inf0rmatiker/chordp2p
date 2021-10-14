@@ -1,7 +1,9 @@
 package org.chord.discovery;
 
+import org.chord.networking.Node;
 import org.chord.peer.Identifier;
 import org.chord.util.Host;
+import org.chord.util.InteractiveCommandParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,7 +11,7 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class DiscoveryNode {
+public class DiscoveryNode extends Node {
     private static final Logger log = LoggerFactory.getLogger(DiscoveryNode.class);
 
     // Hostname of the discovery server
@@ -21,11 +23,13 @@ public class DiscoveryNode {
     // For generating a sequence of pseudo-random numbers
     public Random random;
 
+    private InteractiveCommandParser commandParser;
 
     public DiscoveryNode() {
         this.hostname = Host.getHostname();
         this.registeredPeers = new ConcurrentHashMap<>();
         this.random = new Random();
+        commandParser = new InteractiveCommandParser(this);
         log.info("Started Discovery Node on {}", this.hostname);
     }
 
@@ -66,6 +70,7 @@ public class DiscoveryNode {
 
     public void startServer() {
         new DiscoveryNodeServer(this).launchAsThread();
+        commandParser.start();
     }
 
 }

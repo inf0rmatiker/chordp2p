@@ -17,6 +17,7 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DiscoveryNodeProcessor extends Processor {
+
     private static final Logger log = LoggerFactory.getLogger(DiscoveryNodeProcessor.class);
 
     public DiscoveryNode discoveryNode;

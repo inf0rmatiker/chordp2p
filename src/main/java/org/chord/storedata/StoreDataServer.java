@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.net.Socket;
 
 public class StoreDataServer extends Server {
-    private static final Logger logger = LoggerFactory.getLogger(StoreDataServer.class);
+    private static final Logger log = LoggerFactory.getLogger(StoreDataServer.class);
     
     @Override
     public void processConnection(Socket clientSocket) {

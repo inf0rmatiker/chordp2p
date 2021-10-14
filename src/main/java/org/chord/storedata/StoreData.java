@@ -1,11 +1,12 @@
 package org.chord.storedata;
 
+import org.chord.networking.Node;
 import org.chord.util.Host;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StoreData {
-    private static final Logger logger = LoggerFactory.getLogger(StoreData.class);
+public class StoreData extends Node {
+    private static final Logger log = LoggerFactory.getLogger(StoreData.class);
 
     // Hostname of the StoreData node
     public String hostname;
@@ -18,7 +19,7 @@ public class StoreData {
         return hostname;
     }
 
-    public void addFile() {
+    public void addFile(String filePath) {
 
     }
 }

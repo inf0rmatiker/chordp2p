@@ -2,8 +2,10 @@ package org.chord.peer;
 
 import org.chord.messaging.*;
 import org.chord.networking.Client;
+import org.chord.networking.Node;
 import org.chord.util.Constants;
 import org.chord.util.Host;
+import org.chord.util.InteractiveCommandParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,7 +13,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-public class Peer {
+public class Peer extends Node {
     private static final Logger log = LoggerFactory.getLogger(Peer.class);
 
     private final String discoveryNodeHostname;
@@ -22,11 +24,14 @@ public class Peer {
     private Identifier predecessor;
     private Identifier successor;
 
+    private InteractiveCommandParser commandParser;
+
     public Peer(String discoveryNodeHostname, int discoveryNodePort, Identifier identifier) {
         this.discoveryNodeHostname = discoveryNodeHostname;
         this.discoveryNodePort = discoveryNodePort;
         this.identifier = this.predecessor = this.successor = identifier; // init all known peers to our id
         this.fingerTable = new FingerTable(Constants.FINGER_TABLE_SIZE, identifier);
+        commandParser = new InteractiveCommandParser(this);
     }
 
     public String getHostname() {
@@ -158,11 +163,20 @@ public class Peer {
         }
     }
 
+    public void printFingerTable() {
+
+    }
+
+    public void printId() {
+        System.out.println(identifier.id);
+    }
+
     /**
      * Launches the Peer server as a thread.
      */
     public void startServer() {
         new PeerServer(this).launchAsThread();
+        commandParser.start();
     }
 
     @Override

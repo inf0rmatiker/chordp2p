@@ -39,6 +39,7 @@ public class Main {
     }
 
     public static void main(String[] args) {
+        log.info("Starting main...");
         Getopt g = new Getopt("Main.java", args, "", generateValidOptions(), true);
         int c;
         while ((c = g.getopt()) != -1) {

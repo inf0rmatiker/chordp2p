@@ -65,31 +65,27 @@ public class DiscoveryNodeProcessor extends Processor {
     }
 
     private void processRegisterPeerRequest(RegisterPeerRequest message) {
-        String id = message.getId();
-        log.info("{} attempting to join with ID '{}'", message.getHostname(), id);
+        log.info("{} requesting registration", message.getPeerId());
 
         RegisterPeerResponse response;
-        if (registeredPeers.isEmpty()) {
+        if (this.registeredPeers.isEmpty()) {
             log.info("{} - First peer to join the network", message.getHostname());
-            response = new RegisterPeerResponse(Host.getHostname(), Host.getIpAddress(), true,
-                    message.getId(), message.getHostname());
+            response = new RegisterPeerResponse(Host.getHostname(), Host.getIpAddress(), message.getPeerId(),
+                    true);
             sendResponse(this.socket, response);
             return;
         }
 
-        if (registeredPeers.containsKey(id)) {
-            // id collision detected
-            log.warn("Peer with ID {} already exists.", id);
-            response = new RegisterPeerResponse(Host.getHostname(), Host.getIpAddress(), false,
-                    message.getId(), message.getHostname());
+        if (this.registeredPeers.containsKey(message.getPeerId().getId())) { // id collision detected
+            log.warn("Peer with ID {} already exists.", message.getPeerId().getId());
+            response = new RegisterPeerResponse(Host.getHostname(), Host.getIpAddress(), message.getPeerId(),
+                    false);
         } else {
             int noOfRegisteredPeers = registeredPeers.size();
             String randomPeerId = new ArrayList<>(registeredPeers.keySet()).get(random.nextInt() % noOfRegisteredPeers);
             Identifier randomPeer = registeredPeers.get(randomPeerId);
-            response = new RegisterPeerResponse(Host.getHostname(), Host.getIpAddress(), true,
-                    randomPeerId, randomPeer.getHostname());
+            response = new RegisterPeerResponse(Host.getHostname(), Host.getIpAddress(), randomPeer, true);
         }
-
         sendResponse(this.socket, response);
     }
 }

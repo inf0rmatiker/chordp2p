@@ -68,7 +68,7 @@ public class Peer {
         RegisterPeerRequest registerRequest = new RegisterPeerRequest(
                 Host.getHostname(),
                 Host.getIpAddress(),
-                this.identifier.getId()
+                this.identifier
         );
 
         try {
@@ -81,7 +81,7 @@ public class Peer {
             if (rprResponse.getIsValidRequest()) {
 
                 // We are the first node in the network
-                if (rprResponse.getRandomPeerId().equals(this.identifier.getId())) {
+                if (rprResponse.getRandomPeerId().equals(this.identifier)) {
 
                     log.info("First peer to join the network");
                     // TODO: We are first node in network
@@ -89,7 +89,7 @@ public class Peer {
                 } else { // There are other nodes in the network
 
                     log.info("There are other nodes in the network");
-                    String randomPeerHost = rprResponse.getRandomPeerHost();
+                    String randomPeerHost = rprResponse.getRandomPeerId().getHostname();
 
                     /* TODO:
                         Contact random peer and get successor/predecessor node info.
@@ -128,7 +128,14 @@ public class Peer {
                 log.warn("Peer with ID {} already exists in the network! TODO: Implement retry", this.identifier);
             }
 
-            clientSocket.close();
+            // Notify discovery server of successful network join
+            NetworkJoinNotification notification = new NetworkJoinNotification(
+                    Host.getHostname(),
+                    Host.getIpAddress(),
+                    this.identifier
+            );
+            clientSocket.getOutputStream().write(notification.getMarshaledBytes());
+            clientSocket.close(); // done talking to discovery server
         } catch (IOException e) {
             log.error("Unable to send registration request: {}", e.getMessage());
         }

@@ -7,7 +7,8 @@ import org.slf4j.LoggerFactory;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-public class NetworkExitNotification extends PeerIdentifierMessage{
+public class NetworkExitNotification extends PeerIdentifierMessage {
+
     private static final Logger log = LoggerFactory.getLogger(NetworkExitNotification.class);
 
     public NetworkExitNotification(String hostname, String ipAddress, Identifier peerId) {
@@ -28,8 +29,8 @@ public class NetworkExitNotification extends PeerIdentifierMessage{
         if (o == null) return false;
         if (this == o) return true;
         if (!(o instanceof NetworkExitNotification)) return false;
-        NetworkExitNotification penOther = (NetworkExitNotification) o;
-        return this.peerId.equals(penOther.peerId);
+        NetworkExitNotification nenOther = (NetworkExitNotification) o;
+        return this.peerId.equals(nenOther.peerId);
     }
 
     @Override

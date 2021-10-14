@@ -17,17 +17,14 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DiscoveryNodeProcessor extends Processor {
+
     private static final Logger log = LoggerFactory.getLogger(DiscoveryNodeProcessor.class);
 
     public DiscoveryNode discoveryNode;
-    private ConcurrentHashMap<String, Identifier> registeredPeers;
-    private Random random;
 
     public DiscoveryNodeProcessor(Socket socket, DiscoveryNode discoveryNode) {
         this.socket = socket;
         this.discoveryNode = discoveryNode;
-        registeredPeers = new ConcurrentHashMap<>();
-        random = new Random();
     }
 
     @Override
@@ -49,46 +46,46 @@ public class DiscoveryNodeProcessor extends Processor {
     }
 
     private void processPeerExitNotification(NetworkExitNotification message) {
-        String id = message.getPeerId().id;
-        if (registeredPeers.containsKey(id)) {
-            registeredPeers.remove(id);
-            log.info("Peer '{}' left the network", id);
+        boolean ok = this.discoveryNode.remove(message.getPeerId());
+        if (!ok) {
+            log.error("Peer does not exist. Unable to remove: {}", message.getPeerId());
         } else {
-            log.warn("Peer '{}' does not exist. Unable to remove", id);
+            log.info("Peer removed from the discovery node: {}", message.getPeerId());
         }
     }
 
     private void processNetworkJoinNotification(NetworkJoinNotification message) {
-        registeredPeers.put(message.peerId.id, new Identifier(message.hostname, message.peerId.id));
-        log.info("{} successfully joined the network with ID '{}'", message.hostname, message.peerId.id);
+        boolean ok = this.discoveryNode.put(message.getPeerId());
+        if (!ok) {
+            log.error("Unable to add peer to list of tracked peers: {}", message.getPeerId());
+        } else {
+            log.info("Successfully added peer to list of tracked peers: {}", message.getPeerId());
+        }
     }
 
     private void processRegisterPeerRequest(RegisterPeerRequest message) {
-        String id = message.getId();
-        log.info("{} attempting to join with ID '{}'", message.getHostname(), id);
+        log.info("{} requesting registration", message.getPeerId());
 
         RegisterPeerResponse response;
-        if (registeredPeers.isEmpty()) {
+        if (this.discoveryNode.isEmpty()) {
             log.info("{} - First peer to join the network", message.getHostname());
-            response = new RegisterPeerResponse(Host.getHostname(), Host.getIpAddress(), true,
-                    message.getId(), message.getHostname());
+            response = new RegisterPeerResponse(Host.getHostname(), Host.getIpAddress(), message.getPeerId(),
+                    true);
             sendResponse(this.socket, response);
             return;
         }
 
-        if (registeredPeers.containsKey(id)) {
-            // id collision detected
-            log.warn("Peer with ID {} already exists.", id);
-            response = new RegisterPeerResponse(Host.getHostname(), Host.getIpAddress(), false,
-                    message.getId(), message.getHostname());
+        if (this.discoveryNode.alreadyExists(message.getPeerId())) { // id collision detected
+            log.warn("Peer with ID {} already exists.", message.getPeerId().getId());
+            response = new RegisterPeerResponse(Host.getHostname(), Host.getIpAddress(), message.getPeerId(),
+                    false);
         } else {
-            int noOfRegisteredPeers = registeredPeers.size();
-            String randomPeerId = new ArrayList<>(registeredPeers.keySet()).get(random.nextInt() % noOfRegisteredPeers);
-            Identifier randomPeer = registeredPeers.get(randomPeerId);
-            response = new RegisterPeerResponse(Host.getHostname(), Host.getIpAddress(), true,
-                    randomPeerId, randomPeer.getHostname());
+            response = new RegisterPeerResponse(
+                    Host.getHostname(),
+                    Host.getIpAddress(),
+                    this.discoveryNode.getRandomPeer(),
+                    true);
         }
-
         sendResponse(this.socket, response);
     }
 }

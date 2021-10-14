@@ -3,8 +3,10 @@ package org.chord;
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
 import org.chord.discovery.DiscoveryNode;
+import org.chord.peer.Identifier;
 import org.chord.peer.Peer;
 import org.chord.util.Constants;
+import org.chord.util.Host;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +17,7 @@ public class Main {
 
     public static LongOpt[] generateValidOptions() {
         LongOpt[] longOpts = new LongOpt[2];
-        longOpts[0] = new LongOpt("discovery-node", LongOpt.REQUIRED_ARGUMENT, null, 'd');
+        longOpts[0] = new LongOpt("discovery-node", LongOpt.NO_ARGUMENT, null, 'd');
         longOpts[1] = new LongOpt("peer", LongOpt.REQUIRED_ARGUMENT, null, 'p');
         return longOpts;
     }
@@ -37,6 +39,7 @@ public class Main {
     }
 
     public static void main(String[] args) {
+        log.info("Starting main...");
         Getopt g = new Getopt("Main.java", args, "", generateValidOptions(), true);
         int c;
         while ((c = g.getopt()) != -1) {
@@ -62,16 +65,16 @@ public class Main {
     }
 
     private static void startPeer(String discoveryNodeHostname, String id) {
-        peer = new Peer(discoveryNodeHostname, Constants.DiscoveryNode.PORT, id);
+        peer = new Peer(discoveryNodeHostname, Constants.DiscoveryNode.PORT, new Identifier(Host.getHostname(), id));
         peer.startServer();
+        peer.joinNetwork();
     }
 
     private static void printUsage() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Usage: Main [options]\n\n");
-        sb.append("  discovery-node\tstart discovery node for current machine\n");
-        sb.append("  peer\tstart peer node for current machine\n");
-        System.out.println(sb);
+        String usage = "Usage: Main [OPTIONS]\n\n" +
+                "\t--discovery-node\tstart discovery node for current machine\n" +
+                "\t--peer <discovery_node_hostname> <hex_identifier>\tstart peer node for current machine\n";
+        System.out.println(usage);
     }
 
     private static void startDiscoveryNode() {

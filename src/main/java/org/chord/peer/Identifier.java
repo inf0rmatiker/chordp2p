@@ -1,5 +1,7 @@
 package org.chord.peer;
 
+import org.chord.util.HashUtil;
+
 public class Identifier {
 
     // The hostname of the peer
@@ -19,6 +21,14 @@ public class Identifier {
 
     public String getId() {
         return id;
+    }
+
+    public int value() {
+        return HashUtil.hexToInt(this.id);
+    }
+
+    public static int valueOf(String id) {
+        return HashUtil.hexToInt(id);
     }
 
     @Override

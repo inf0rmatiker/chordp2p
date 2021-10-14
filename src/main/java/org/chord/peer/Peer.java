@@ -25,7 +25,7 @@ public class Peer {
     public Peer(String discoveryNodeHostname, int discoveryNodePort, Identifier identifier) {
         this.discoveryNodeHostname = discoveryNodeHostname;
         this.discoveryNodePort = discoveryNodePort;
-        this.identifier = identifier;
+        this.identifier = this.predecessor = this.successor = identifier; // init all known peers to our id
         this.fingerTable = new FingerTable(Constants.FINGER_TABLE_SIZE, identifier);
     }
 
@@ -40,6 +40,21 @@ public class Peer {
     public FingerTable getFingerTable() {
         return fingerTable;
     }
+
+    public Identifier getPredecessor() { return predecessor; }
+
+    public void setPredecessor(Identifier predecessor) {
+        this.predecessor = predecessor;
+    }
+
+    public Identifier getSuccessor() { return successor; }
+
+    public void setSuccessor(Identifier successor) {
+        this.successor = successor;
+        this.fingerTable.updateWithSuccessor(successor);
+    }
+
+    public Identifier getIdentifier() { return identifier; }
 
     /**
      * Joins the Peer to the Chord ring network:
@@ -72,6 +87,8 @@ public class Peer {
                     // TODO: We are first node in network
 
                 } else { // There are other nodes in the network
+
+                    log.info("There are other nodes in the network");
                     String randomPeerHost = rprResponse.getRandomPeerHost();
 
                     /* TODO:
@@ -81,41 +98,42 @@ public class Peer {
                         Initiate migration of data items > predecessor and <= self id
                      */
 
-                    // Request peer Identifier of predecessor node
-                    GetPredecessorRequest predecessorRequest = new GetPredecessorRequest(
+                    // Get Identifier of successor peer
+                    FindSuccessorRequest successorRequest = new FindSuccessorRequest(
                             Host.getHostname(),
                             Host.getIpAddress(),
                             this.identifier.getId()
                     );
-                    Socket peerSocket = Client.sendMessage(randomPeerHost, Constants.Peer.PORT, predecessorRequest);
+                    Socket peerSocket = Client.sendMessage(randomPeerHost, Constants.Peer.PORT, successorRequest);
                     dataInputStream = new DataInputStream(peerSocket.getInputStream());
-                    GetPredecessorResponse gprResponse = (GetPredecessorResponse) MessageFactory.getInstance()
+                    PeerIdentifierMessage pimResponse = (PeerIdentifierMessage) MessageFactory.getInstance()
                             .createMessage(dataInputStream);
                     peerSocket.close();
-                    this.predecessor = gprResponse.getPeerId();
+                    this.successor = pimResponse.getPeerId();
 
-                    // Request peer Identifier of successor node
-                    GetSuccessorRequest successorRequest = new GetSuccessorRequest(
+                    // Now that we know our successor peer, we can directly query its known predecessor
+                    // which will become our predecessor
+                    GetPredecessorRequest gpRequest = new GetPredecessorRequest(
                             Host.getHostname(),
-                            Host.getIpAddress(),
-                            this.identifier.getId()
+                            Host.getIpAddress()
                     );
-                    peerSocket = Client.sendMessage(randomPeerHost, Constants.Peer.PORT, predecessorRequest);
+                    peerSocket = Client.sendMessage(randomPeerHost, Constants.Peer.PORT, gpRequest);
                     dataInputStream = new DataInputStream(peerSocket.getInputStream());
-                    GetSuccessorResponse gsr = (GetSuccessorResponse) MessageFactory.getInstance()
-                            .createMessage(dataInputStream);
+                    pimResponse = (PeerIdentifierMessage) MessageFactory.getInstance().createMessage(dataInputStream);
                     peerSocket.close();
-                    this.successor = gsr.getPeerId();
+                    this.predecessor = pimResponse.getPeerId();
                 }
             } else {
                 // TODO: Generate new id and retry
-                log.warn("Peer with ID {} already exists in the network", this.identifier);
+                log.warn("Peer with ID {} already exists in the network! TODO: Implement retry", this.identifier);
             }
 
             clientSocket.close();
         } catch (IOException e) {
             log.error("Unable to send registration request: {}", e.getMessage());
         }
+
+        log.info("After joining the network:\n{}", this); // log our state
     }
 
     /**
@@ -139,4 +157,13 @@ public class Peer {
     public void startServer() {
         new PeerServer(this).launchAsThread();
     }
+
+    @Override
+    public String toString() {
+        return "Peer:\n" +
+                String.format("\tid: %s\n", this.identifier) +
+                String.format("\tpredecessor: %s\n", this.predecessor) +
+                String.format("\tsuccessor: %s\n", this.successor);
+    }
+
 }

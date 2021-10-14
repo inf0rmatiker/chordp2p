@@ -11,13 +11,9 @@ public class GetPredecessorRequest extends Message {
 
     private static final Logger log = LoggerFactory.getLogger(GetPredecessorRequest.class);
 
-    // String hex identifier of either a node or data item
-    public String id;
-
-    public GetPredecessorRequest(String hostname, String ipAddress, String id) {
+    public GetPredecessorRequest(String hostname, String ipAddress) {
         this.hostname = hostname;
         this.ipAddress = ipAddress;
-        this.id = id;
         try {
             marshal();
         } catch (IOException e) {
@@ -34,34 +30,17 @@ public class GetPredecessorRequest extends Message {
         return MessageType.GET_PREDECESSOR_REQUEST;
     }
 
-    public String getId() {
-        return id;
-    }
-
-    @Override
-    public void marshal(DataOutputStream dataOutputStream) throws IOException {
-        super.marshal(dataOutputStream);
-        writeString(dataOutputStream, id);
-    }
-
-    @Override
-    public void unmarshal(DataInputStream dataInputStream) throws IOException {
-        super.unmarshal(dataInputStream);
-        this.id = readString(dataInputStream);
-    }
-
     @Override
     public boolean equals(Object o) {
         if (o == null) return false;
         if (this == o) return true;
         if (!(o instanceof GetPredecessorRequest)) return false;
         GetPredecessorRequest gprOther = (GetPredecessorRequest) o;
-        return this.id.equals(gprOther.getId());
+        return this.hostname.equals(gprOther.getHostname());
     }
 
     @Override
     public String toString() {
-        return "GetPredecessorRequest:\n" +
-                String.format("\tid: %s\n", this.id);
+        return "GetPredecessorRequest\n";
     }
 }

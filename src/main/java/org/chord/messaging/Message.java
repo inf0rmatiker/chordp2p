@@ -19,8 +19,8 @@ public abstract class Message {
 
     public enum MessageType {
         REGISTER_PEER_REQUEST, REGISTER_PEER_RESPONSE, PEER_IDENTIFIER_MESSAGE, GET_PREDECESSOR_REQUEST,
-        GET_PREDECESSOR_RESPONSE, GET_SUCCESSOR_REQUEST, GET_SUCCESSOR_RESPONSE, NETWORK_JOIN_NOTIFICATION,
-        NETWORK_EXIT_NOTIFICATION
+        GET_SUCCESSOR_REQUEST, NETWORK_JOIN_NOTIFICATION, NETWORK_EXIT_NOTIFICATION, FIND_SUCCESSOR_REQUEST,
+        PREDECESSOR_NOTIFICATION, SUCCESSOR_NOTIFICATION
     }
 
     public abstract MessageType getType();
@@ -273,11 +273,12 @@ public abstract class Message {
             case 1: return MessageType.REGISTER_PEER_RESPONSE;
             case 2: return MessageType.PEER_IDENTIFIER_MESSAGE;
             case 3: return MessageType.GET_PREDECESSOR_REQUEST;
-            case 4: return MessageType.GET_PREDECESSOR_RESPONSE;
-            case 5: return MessageType.GET_SUCCESSOR_REQUEST;
-            case 6: return MessageType.GET_SUCCESSOR_RESPONSE;
-            case 7: return MessageType.NETWORK_JOIN_NOTIFICATION;
-            case 8: return MessageType.NETWORK_EXIT_NOTIFICATION;
+            case 4: return MessageType.GET_SUCCESSOR_REQUEST;
+            case 5: return MessageType.NETWORK_JOIN_NOTIFICATION;
+            case 6: return MessageType.NETWORK_EXIT_NOTIFICATION;
+            case 7: return MessageType.FIND_SUCCESSOR_REQUEST;
+            case 8: return MessageType.PREDECESSOR_NOTIFICATION;
+            case 9: return MessageType.SUCCESSOR_NOTIFICATION;
             default: return null;
         }
     }
@@ -297,11 +298,12 @@ public abstract class Message {
             case REGISTER_PEER_RESPONSE: return 1;
             case PEER_IDENTIFIER_MESSAGE: return 2;
             case GET_PREDECESSOR_REQUEST: return 3;
-            case GET_PREDECESSOR_RESPONSE: return 4;
-            case GET_SUCCESSOR_REQUEST: return 5;
-            case GET_SUCCESSOR_RESPONSE: return 6;
-            case NETWORK_JOIN_NOTIFICATION: return 7;
-            case NETWORK_EXIT_NOTIFICATION: return 8;
+            case GET_SUCCESSOR_REQUEST: return 4;
+            case NETWORK_JOIN_NOTIFICATION: return 5;
+            case NETWORK_EXIT_NOTIFICATION: return 6;
+            case FIND_SUCCESSOR_REQUEST: return 7;
+            case PREDECESSOR_NOTIFICATION: return 8;
+            case SUCCESSOR_NOTIFICATION: return 9;
             default: return -1;
         }
     }

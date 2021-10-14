@@ -10,6 +10,16 @@ import java.util.List;
 
 import static org.chord.util.Constants.MAX_ID;
 
+/**
+ * Maintains information about log(N) successor nodes (clockwise) in the chord ring network.
+ * Let p be the numerical id of this node in the ring.
+ * At each index i in the peer table, we store the successor(p + 2^i) Identifier.
+ * Example: Where i = 0, we store the Identifier of the successor for the id 1 hop away (successor(p+1)),
+ * and where i = 1, we store the Identifier of the successor for the id 2 hops away (successor(p+2)),
+ * and where i = 2, we store the Identifier of the successor for the id 4 hops away (successor(p+4)).
+ *
+ * The successor of an id k (successor(k)) is defined by the node with the smallest id p, such that p >= k.
+ */
 public class FingerTable {
 
     private static final Logger log = LoggerFactory.getLogger(FingerTable.class);
@@ -77,7 +87,6 @@ public class FingerTable {
         return distanceBetween(ourRingPosition, idValue);
     }
 
-
     /**
      * Calculates raw clockwise distance between two positions on the chord ring.
      * @param a First position
@@ -88,59 +97,81 @@ public class FingerTable {
         return (b >= a) ? b - a : ((MAX_ID + 1) - a) + b;
     }
 
+    /**
+     * Determines if we know the successor of id k:
+     * If our id p < k, and k <= the first entry in our
+     * finger table, then the first entry in our finger table is k's successor.
+     * @param id Hex representation of k
+     * @return True if we know k's successor, false if not
+     */
+    public boolean knowsFinalSuccessorOf(String id) {
+        int k = Identifier.valueOf(id);
+        int p = identifier.value();
+        if (p == k) return true;
+
+        int firstSuccessor = peerIds.get(0).value();
+        if (p < firstSuccessor) {
+            return p < k && k <= firstSuccessor;
+        } else { // p > firstSuccessor
+            return p < k || k <= firstSuccessor;
+        }
+    }
+
+    /**
+     * Tells if p is the successor of k, taking into account ring structure.
+     * @param p potential successor value
+     * @param k an id of a data item or node
+     * @return true if p is a successor of k, false if not
+     */
+    public boolean isSuccessorOf(int p, int k) {
+        int us = this.identifier.value();
+        if (p > us) { // if range does not wrap
+            return (k > us && k <= p);
+        } else { // range wraps, i.e. (p < us)
+            return (k > us || k <= p);
+        }
+    }
+
+    /**
+     * Finds the successor of an identifier, using the information available in our finger table.
+     * The successor(k) is the successor node with the smallest id p, such that p >= k.
+     * @param id The String hex representation of k
+     * @return The Identifier of the successor for k, with respect to this peer p.
+     */
     public Identifier successor(String id) {
-
-        int k = HashUtil.hexToInt(id);
-        int us = HashUtil.hexToInt(identifier.getId());
+        int k = Identifier.valueOf(id);
+        int p = identifier.value();
         log.debug("successor({}): k: {}", id, k);
-        log.debug("successor({}): us: {}", id, us);
+        log.debug("successor({}): p: {}", id, p);
 
-        // If it's the same position as us, return our identifier
-        if (k == us) {
-            log.debug("successor({}): k == us, returning our own identifier", id);
+        // If it's the same position as p, return our identifier
+        if (k == p) {
+            log.debug("successor({}): k == p, returning our own identifier", id);
             return identifier;
-        } else if (k > us) { // k after us in the ring, so no need to wrap around
-            log.debug("successor({}): k > us", id);
-
+        } else {
             int ftIndex = 0;
             for (; ftIndex < peerIds.size(); ftIndex++) {
-                int i = ringPositionOfIndex(ftIndex);
-
-                // If the ring position of the FT index is the same as the requested id, return that successor
-                if (i == k) {
+                int successor = peerIds.get(ftIndex).value();
+                if (isSuccessorOf(successor, k)) {
                     return peerIds.get(ftIndex);
-                }
-
-                // If we overshot k and landed further in the ring,
-                // or if we overshot k and landed past the wrapping point
-                // which would be before us
-                if ( i > k || i < us ) {
-                    return peerIds.get(ftIndex-1);
-                }
-            }
-
-        } else { // before us in the ring, so must wrap around (i.e. k < us)
-            log.debug("successor({}): k < us", id);
-
-            int ftIndex = 0;
-            for (; ftIndex < peerIds.size(); ftIndex++) {
-                int i = ringPositionOfIndex(ftIndex);
-
-                // If the ring position of the FT index is the same as the requested id, return that successor
-                if (i == k) {
-                    return peerIds.get(ftIndex);
-                }
-
-                // i > k at two parts of the ring:
-                // 1: before we wrap, but before we've reached k
-                // 2: after we wrap, but after we've overshot k
-                // Choose the latter, which means i < us
-                if ( i > k && i < us ) {
-                    return peerIds.get(ftIndex-1);
                 }
             }
         }
         return peerIds.get(peerIds.size()-1); // we didn't reach k, so return the closest point we can get to it
+    }
+
+    /**
+     * Iterates over finger table indices and updates their value with the new successor
+     * @param successorId Identifier of our new successor
+     */
+    public void updateWithSuccessor(Identifier successorId) {
+        int successor = successorId.value();
+        for (int ftIndex = 0; ftIndex < this.peerIds.size(); ftIndex++) {
+            int k = ringPositionOfIndex(ftIndex);
+            if (isSuccessorOf(successor, k)) {
+                this.peerIds.set(ftIndex, successorId);
+            }
+        }
     }
 
     @Override
@@ -148,8 +179,10 @@ public class FingerTable {
         StringBuilder sb = new StringBuilder("FingerTable:\n");
         sb.append(String.format("\tidentifier: %s\n", this.identifier));
         sb.append("\tpeerIds: [\n");
+        int i = 0;
         for (Identifier peerId: this.peerIds) {
-            sb.append(String.format("\t  %s\n", peerId));
+            sb.append(String.format("\t %d : %s\n", i, peerId));
+            i++;
         }
         sb.append("\t]\n");
         return sb.toString();

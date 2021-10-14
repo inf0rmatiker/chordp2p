@@ -51,10 +51,10 @@ public class MessageFactory {
                 case REGISTER_PEER_RESPONSE: return new RegisterPeerResponse(dataInputStream);
                 case PEER_IDENTIFIER_MESSAGE: return new PeerIdentifierMessage(dataInputStream);
                 case GET_PREDECESSOR_REQUEST: return new GetPredecessorRequest(dataInputStream);
-                case GET_PREDECESSOR_RESPONSE: return new GetPredecessorResponse(dataInputStream);
                 case GET_SUCCESSOR_REQUEST: return new GetSuccessorRequest(dataInputStream);
-                case GET_SUCCESSOR_RESPONSE: return new GetSuccessorResponse(dataInputStream);
                 case NETWORK_JOIN_NOTIFICATION: return new NetworkJoinNotification(dataInputStream);
+                case NETWORK_EXIT_NOTIFICATION: return new NetworkExitNotification(dataInputStream);
+                case FIND_SUCCESSOR_REQUEST: return new FindSuccessorRequest(dataInputStream);
                 default: return null;
             }
         } else {

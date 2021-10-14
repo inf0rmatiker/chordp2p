@@ -58,20 +58,21 @@ public class FingerTableTest {
     public void testFingerTableGetSuccessorWraps() {
         Identifier id = new Identifier("shark", "6");
         List<Identifier> peerIds = new ArrayList<>() {{
-           add(new Identifier("a", "1"));
-           add(new Identifier("b", "2"));
+           add(new Identifier("a", "7"));
+           add(new Identifier("b", "0"));
            add(new Identifier("c", "3"));
         }};
         FingerTable ft = new FingerTable(id, peerIds); // id space is 2^3, or 0 - 7
-        Identifier expected = peerIds.get(1); // 2 hops away
-        Identifier actual = ft.successor("0");
+        Identifier expected = peerIds.get(0);
+        Identifier actual = ft.successor("7");
         assertEquals(expected, actual);
 
-        actual = ft.successor("1"); // still 2 hops away
+        expected = peerIds.get(1);
+        actual = ft.successor("0");
         assertEquals(expected, actual);
 
-        actual = ft.successor("3");
-        expected = peerIds.get(2); // 2 hops away
+        expected = peerIds.get(2);
+        actual = ft.successor("1");
         assertEquals(expected, actual);
     }
 
@@ -79,13 +80,33 @@ public class FingerTableTest {
     public void testFingerTableGetSuccessorDoesntWrap() {
         Identifier id = new Identifier("shark", "2");
         List<Identifier> peerIds = new ArrayList<>() {{
-            add(new Identifier("a", "1"));
-            add(new Identifier("b", "2"));
-            add(new Identifier("c", "3"));
+            add(new Identifier("a", "4"));
+            add(new Identifier("b", "6"));
+            add(new Identifier("c", "0"));
         }};
         FingerTable ft = new FingerTable(id, peerIds); // id space is 2^3, or 0 - 7
-        Identifier expected = peerIds.get(1); // 2 hops away
-        Identifier actual = ft.successor("1");
+        Identifier expected = peerIds.get(0);
+        Identifier actual = ft.successor("3");
+        assertEquals(expected, actual);
+
+        actual = ft.successor("4");
+        expected = peerIds.get(0);
+        assertEquals(expected, actual);
+
+        actual = ft.successor("5");
+        expected = peerIds.get(1);
+        assertEquals(expected, actual);
+
+        actual = ft.successor("6");
+        expected = peerIds.get(1);
+        assertEquals(expected, actual);
+
+        actual = ft.successor("7");
+        expected = peerIds.get(2);
+        assertEquals(expected, actual);
+
+        actual = ft.successor("0");
+        expected = peerIds.get(2);
         assertEquals(expected, actual);
     }
 

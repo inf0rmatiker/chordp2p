@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.List;
 
 public class Peer extends Node {
     private static final Logger log = LoggerFactory.getLogger(Peer.class);
@@ -164,7 +165,14 @@ public class Peer extends Node {
     }
 
     public void printFingerTable() {
-
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("Finger Table for %s:\n", getHostname()));
+        List<Identifier> peerIds = this.fingerTable.peerIds;
+        for (int i = 0, peerIdsSize = peerIds.size(); i < peerIdsSize; i++) {
+            Identifier peerId = peerIds.get(i);
+            sb.append(String.format("%d: %s\n", i, peerId));
+        }
+        System.out.println(sb);
     }
 
     public void printId() {

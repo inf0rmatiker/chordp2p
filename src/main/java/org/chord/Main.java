@@ -78,6 +78,7 @@ public class Main {
     }
 
     private static void startDiscoveryNode() {
+        log.info("Starting discovery node");
         DiscoveryNode discoveryNode = new DiscoveryNode();
         discoveryNode.startServer();
     }

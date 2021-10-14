@@ -1,4 +1,4 @@
-package org.chord.storeData;
+package org.chord.storedata;
 
 import org.chord.messaging.Message;
 import org.chord.networking.Processor;

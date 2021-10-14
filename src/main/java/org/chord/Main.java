@@ -16,9 +16,10 @@ public class Main {
     private static Peer peer;
 
     public static LongOpt[] generateValidOptions() {
-        LongOpt[] longOpts = new LongOpt[2];
+        LongOpt[] longOpts = new LongOpt[3];
         longOpts[0] = new LongOpt("discovery-node", LongOpt.NO_ARGUMENT, null, 'd');
         longOpts[1] = new LongOpt("peer", LongOpt.REQUIRED_ARGUMENT, null, 'p');
+        longOpts[2] = new LongOpt("exit", LongOpt.REQUIRED_ARGUMENT, null, 'e');
         return longOpts;
     }
 

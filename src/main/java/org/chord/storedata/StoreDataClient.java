@@ -1,4 +1,4 @@
-package org.chord.storeData;
+package org.chord.storedata;
 
 import org.chord.networking.Client;
 import org.slf4j.Logger;

@@ -60,7 +60,7 @@ public class DiscoveryNodeProcessor extends Processor {
     }
 
     private void processNetworkJoinNotification(NetworkJoinNotification message) {
-        registeredPeers.put(message.peerId.id, new Identifier(message.hostname, message.peerId.id));
+        this.registeredPeers.put(message.getPeerId().getId(), message.getPeerId());
         log.info("{} successfully joined the network with ID '{}'", message.hostname, message.peerId.id);
     }
 

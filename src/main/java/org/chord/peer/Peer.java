@@ -77,14 +77,14 @@ public class Peer {
             Socket clientSocket = Client.sendMessage(this.discoveryNodeHostname, this.discoveryNodePort, registerRequest);
             DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream());
             RegisterPeerResponse rprResponse = (RegisterPeerResponse) MessageFactory.getInstance().createMessage(dataInputStream);
+            clientSocket.close(); // done talking to discovery server
 
             if (rprResponse.getIsValidRequest()) {
 
                 // We are the first node in the network
                 if (rprResponse.getRandomPeerId().equals(this.identifier)) {
 
-                    log.info("First peer to join the network");
-                    // TODO: We are first node in network
+                    log.info("We are the first peer to join the network");
 
                 } else { // There are other nodes in the network
 
@@ -134,8 +134,8 @@ public class Peer {
                     Host.getIpAddress(),
                     this.identifier
             );
-            clientSocket.getOutputStream().write(notification.getMarshaledBytes());
-            clientSocket.close(); // done talking to discovery server
+            Client.sendMessage(this.discoveryNodeHostname, this.discoveryNodePort, notification).close();
+
         } catch (IOException e) {
             log.error("Unable to send registration request: {}", e.getMessage());
         }

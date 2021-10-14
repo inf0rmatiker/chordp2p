@@ -72,13 +72,12 @@ public class Main {
 
     private static void printUsage() {
         String usage = "Usage: Main [OPTIONS]\n\n" +
-                "\tdiscovery-node\tstart discovery node for current machine\n" +
-                "\tpeer\tstart peer node for current machine\n";
+                "\t--discovery-node\tstart discovery node for current machine\n" +
+                "\t--peer <discovery_node_hostname> <hex_identifier>\tstart peer node for current machine\n";
         System.out.println(usage);
     }
 
     private static void startDiscoveryNode() {
-        log.info("Starting discovery node");
         DiscoveryNode discoveryNode = new DiscoveryNode();
         discoveryNode.startServer();
     }

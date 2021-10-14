@@ -17,7 +17,7 @@ public class Main {
 
     public static LongOpt[] generateValidOptions() {
         LongOpt[] longOpts = new LongOpt[2];
-        longOpts[0] = new LongOpt("discovery-node", LongOpt.REQUIRED_ARGUMENT, null, 'd');
+        longOpts[0] = new LongOpt("discovery-node", LongOpt.NO_ARGUMENT, null, 'd');
         longOpts[1] = new LongOpt("peer", LongOpt.REQUIRED_ARGUMENT, null, 'p');
         return longOpts;
     }

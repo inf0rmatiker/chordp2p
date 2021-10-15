@@ -155,12 +155,13 @@ public class PeerProcessor extends Processor {
     }
 
     public void processNetworkJoinNotification(NetworkJoinNotification message) throws IOException {
-        if (!message.getPeerId().equals(peer.getIdentifier())) {
+        if (!message.getPeerId().equals(this.peer.getIdentifier())) {
             log.info("Updating finger table with peer: {}", message.getPeerId());
             this.peer.updateFingerTable(message.getPeerId());
-
             log.debug("NetworkJoinNotification Message: {}", message);
-            Client.sendMessage(this.peer.getPredecessor().getHostname(), Constants.Peer.PORT, message).close();
+            if (!message.getPeerId().equals(this.peer.getPredecessor())) {
+                Client.sendMessage(this.peer.getPredecessor().getHostname(), Constants.Peer.PORT, message).close();
+            }
         }
     }
 

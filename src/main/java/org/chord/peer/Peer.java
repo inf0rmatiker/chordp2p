@@ -142,7 +142,7 @@ public class Peer extends Node {
                         Host.getIpAddress(),
                         this.identifier
                 );
-                Client.waitForResponseAndClose(
+                Client.waitForStatusResponseAndClose(
                         Client.sendMessage(this.successor.getHostname(), Constants.Peer.PORT, predecessorNotification)
                 );
 
@@ -152,7 +152,7 @@ public class Peer extends Node {
                         Host.getIpAddress(),
                         this.identifier
                 );
-                Client.waitForResponseAndClose(
+                Client.waitForStatusResponseAndClose(
                         Client.sendMessage(this.predecessor.getHostname(), Constants.Peer.PORT, successorNotification)
                 );
 

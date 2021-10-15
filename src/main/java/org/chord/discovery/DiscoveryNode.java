@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DiscoveryNode extends Node {
@@ -18,7 +19,7 @@ public class DiscoveryNode extends Node {
     public String hostname;
 
     // Set of all known registered peers in network
-    public ConcurrentHashMap<String, Identifier> registeredPeers;
+    public Vector<Identifier> registeredPeers;
 
     // For generating a sequence of pseudo-random numbers
     public Random random;
@@ -27,7 +28,7 @@ public class DiscoveryNode extends Node {
 
     public DiscoveryNode() {
         this.hostname = Host.getHostname();
-        this.registeredPeers = new ConcurrentHashMap<>();
+        this.registeredPeers = new Vector<>();
         this.random = new Random();
         commandParser = new InteractiveCommandParser(this);
         log.info("Started Discovery Node on {}", this.hostname);
@@ -37,7 +38,7 @@ public class DiscoveryNode extends Node {
         return hostname;
     }
 
-    public ConcurrentHashMap<String, Identifier> getRegisteredPeers() {
+    public Vector<Identifier> getRegisteredPeers() {
         return registeredPeers;
     }
 
@@ -47,15 +48,15 @@ public class DiscoveryNode extends Node {
 
     public boolean put(Identifier peerId) {
         // Return val of put() is previous value there, or null if nothing there already
-        return this.registeredPeers.put(peerId.getId(), peerId) == null;
+        return this.registeredPeers.add(peerId);
     }
 
     public boolean alreadyExists(Identifier peerId) {
-        return this.registeredPeers.containsKey(peerId.getId());
+        return this.registeredPeers.contains(peerId);
     }
 
     public boolean remove(Identifier peerId) {
-        return this.registeredPeers.remove(peerId.getId()) != null;
+        return this.registeredPeers.remove(peerId);
     }
 
     public boolean isEmpty() {
@@ -64,8 +65,8 @@ public class DiscoveryNode extends Node {
 
     public Identifier getRandomPeer() {
         int randomIndex = this.random.nextInt() % registeredPeers.size();
-        String randomPeerId = new ArrayList<>(registeredPeers.keySet()).get(randomIndex);
-        return registeredPeers.get(randomPeerId);
+        log.debug("Choosing random index {}", randomIndex);
+        return this.registeredPeers.get(randomIndex);
     }
 
     public void startServer() {

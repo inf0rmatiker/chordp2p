@@ -53,4 +53,17 @@ public class HashUtil {
         return Integer.parseUnsignedInt(hex, 16);
     }
 
+    /**
+     * Converts an int to a length-4 hex value
+     * @param val integer to convert
+     * @return converted String
+     */
+    public static String intToHex(Integer val) {
+        StringBuilder sb = new StringBuilder(Integer.toHexString(val));
+        while (sb.length() < 4) {
+            sb.insert(0, "0");
+        }
+        return sb.toString();
+    }
+
 }

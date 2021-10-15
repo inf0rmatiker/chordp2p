@@ -104,29 +104,43 @@ public class PeerProcessor extends Processor {
     public void processFindSuccessorRequest(FindSuccessorRequest message) throws IOException {
         FingerTable ourFingerTable = this.peer.getFingerTable();
         String id = message.getId();
-        PeerIdentifierMessage response = null;
 
         if (ourFingerTable.knowsFinalSuccessorOf(message.getId())) {
 
             Identifier finalSuccessor = ourFingerTable.successor(id);
             log.info("The final successor of id {} is: {}", message.getId(), finalSuccessor);
-            response = new PeerIdentifierMessage(Host.getHostname(), Host.getIpAddress(), finalSuccessor);
+            PeerIdentifierMessage response = new PeerIdentifierMessage(Host.getHostname(), Host.getIpAddress(), finalSuccessor);
+            sendResponse(this.socket, response);
 
-        } else {
+        } else { // We don't know the final successor of k, so forward request to next best successor in finger table
 
-            // Forward GetSuccessorRequest Message to next best peer in finger table
             Identifier nextBestSuccessor = ourFingerTable.successor(id);
             log.info("The next best successor we know of {} is: {}", message.getId(), nextBestSuccessor);
 
             if (nextBestSuccessor.equals(this.peer.getIdentifier())) {
+
                 log.info("Next best successor of {} is us; returning {} as final successor", message.getId(),
                         this.peer.getIdentifier());
-                response = new PeerIdentifierMessage(Host.getHostname(), Host.getIpAddress(), nextBestSuccessor);
+                PeerIdentifierMessage response = new PeerIdentifierMessage(
+                        Host.getHostname(),
+                        Host.getIpAddress(),
+                        nextBestSuccessor
+                );
+                sendResponse(this.socket, response);
+
             } else if (nextBestSuccessor.equals(message.getRequesterId())) {
+
                 log.info("Next best successor of {} is the requester; returning {} as final successor", message.getId(),
                         message.getRequesterId());
-                response = new PeerIdentifierMessage(Host.getHostname(), Host.getIpAddress(), nextBestSuccessor);
+                PeerIdentifierMessage response = new PeerIdentifierMessage(
+                        Host.getHostname(),
+                        Host.getIpAddress(),
+                        nextBestSuccessor
+                );
+                sendResponse(this.socket, response);
+
             } else  { // forward request to next best successor
+
                 try {
                     log.info("Forwarding FindSuccessorRequest message from {} to {}: {}", message.getHostname(),
                             nextBestSuccessor.getHostname(), message);
@@ -136,22 +150,23 @@ public class PeerProcessor extends Processor {
                     message.ipAddress = Host.getIpAddress();
                     message.marshal();
 
+                    // Open Socket to next best successor, request successor(k), get response
                     Socket clientSocket = Client.sendMessage(nextBestSuccessor.getHostname(), Constants.Peer.PORT, message);
                     DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream());
-                    response = (PeerIdentifierMessage) MessageFactory.getInstance().createMessage(dataInputStream);
+                    PeerIdentifierMessage response = (PeerIdentifierMessage) MessageFactory.getInstance().
+                            createMessage(dataInputStream);
                     dataInputStream.close();
                     clientSocket.close(); // done talking with next best successor peer
+
+                    // Return response to original requester
+                    log.info("Received final result of FindSuccessorRequest from {}: {}", response.getHostname(), response);
+                    sendResponse(this.socket, response);
+
                 } catch (IOException e) {
                     log.error("Failed to forward FindSuccessorRequest Message to {}: {}", nextBestSuccessor.getHostname(),
                             e.getMessage());
                 }
             }
-        }
-
-        if (response != null) {
-            sendResponse(this.socket, response); // return response from upstream to requester
-        } else {
-            log.error("GetSuccessorResponse is null!");
         }
     }
 

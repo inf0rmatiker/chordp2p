@@ -64,4 +64,5 @@ public class PeerIdentifierMessage extends Message {
         return "\nPeerIdentifierMessage:\n" +
                 String.format("\tpeerId: %s\n", this.peerId);
     }
+
 }

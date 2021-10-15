@@ -105,21 +105,25 @@ public class PeerProcessor extends Processor {
         FingerTable ourFingerTable = this.peer.getFingerTable();
         String id = message.getId();
 
-        if (ourFingerTable.knowsFinalSuccessorOf(message.getId())) {
+        if (ourFingerTable.knowsFinalSuccessorOf(id)) {
 
             Identifier finalSuccessor = ourFingerTable.successor(id);
-            log.info("The final successor of id {} is: {}", message.getId(), finalSuccessor);
-            PeerIdentifierMessage response = new PeerIdentifierMessage(Host.getHostname(), Host.getIpAddress(), finalSuccessor);
+            log.info("The final successor of id {} is: {}", id, finalSuccessor);
+            PeerIdentifierMessage response = new PeerIdentifierMessage(
+                    Host.getHostname(),
+                    Host.getIpAddress(),
+                    finalSuccessor
+            );
             sendResponse(this.socket, response);
 
         } else { // We don't know the final successor of k, so forward request to next best successor in finger table
 
             Identifier nextBestSuccessor = ourFingerTable.successor(id);
-            log.info("The next best successor we know of {} is: {}", message.getId(), nextBestSuccessor);
+            log.info("The next best successor we know of {} is: {}", id, nextBestSuccessor);
 
             if (nextBestSuccessor.equals(this.peer.getIdentifier())) {
 
-                log.info("Next best successor of {} is us; returning {} as final successor", message.getId(),
+                log.info("Next best successor of {} is us; returning {} as final successor", id,
                         this.peer.getIdentifier());
                 PeerIdentifierMessage response = new PeerIdentifierMessage(
                         Host.getHostname(),
@@ -130,7 +134,7 @@ public class PeerProcessor extends Processor {
 
             } else if (nextBestSuccessor.equals(message.getRequesterId())) {
 
-                log.info("Next best successor of {} is the requester; returning {} as final successor", message.getId(),
+                log.info("Next best successor of {} is the requester; returning {} as final successor", id,
                         message.getRequesterId());
                 PeerIdentifierMessage response = new PeerIdentifierMessage(
                         Host.getHostname(),
@@ -149,17 +153,23 @@ public class PeerProcessor extends Processor {
                     message.hostname = Host.getHostname();
                     message.ipAddress = Host.getIpAddress();
                     message.marshal();
+                    if (this.socket.isClosed()) {
+                        log.error("Socket has been closed 0!!!");
+                    }
 
                     // Open Socket to next best successor, request successor(k), get response
-                    Socket clientSocket = Client.sendMessage(nextBestSuccessor.getHostname(), Constants.Peer.PORT, message);
-                    DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream());
+                    Socket successorSocket = Client.sendMessage(nextBestSuccessor.getHostname(), Constants.Peer.PORT, message);
+                    DataInputStream dataInputStream = new DataInputStream(successorSocket.getInputStream());
                     PeerIdentifierMessage response = (PeerIdentifierMessage) MessageFactory.getInstance().
                             createMessage(dataInputStream);
                     dataInputStream.close();
-                    clientSocket.close(); // done talking with next best successor peer
+                    successorSocket.close(); // done talking with next best successor peer
 
                     // Return response to original requester
                     log.info("Received final result of FindSuccessorRequest from {}: {}", response.getHostname(), response);
+                    if (this.socket.isClosed()) {
+                        log.error("Socket has been closed 1!!!");
+                    }
                     sendResponse(this.socket, response);
 
                 } catch (IOException e) {

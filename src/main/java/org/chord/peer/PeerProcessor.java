@@ -103,12 +103,16 @@ public class PeerProcessor extends Processor {
         PeerIdentifierMessage response = null;
 
         if (ourFingerTable.knowsFinalSuccessorOf(message.getId())) {
+            log.info("We know the final successor of id {}", message.getId());
             Identifier finalSuccessor = ourFingerTable.successor(id);
             response = new PeerIdentifierMessage(Host.getHostname(), Host.getIpAddress(), finalSuccessor);
         } else {
 
             // Forward GetSuccessorRequest Message to next best peer in finger table
             Identifier nextBestSuccessor = ourFingerTable.successor(id);
+            log.info("We don't know the final successor of id {}, forwarding request to next best successor {}",
+                    message.getId(), nextBestSuccessor);
+
             try {
                 Socket clientSocket = Client.sendMessage(nextBestSuccessor.getHostname(), Constants.Peer.PORT, message);
                 DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream());

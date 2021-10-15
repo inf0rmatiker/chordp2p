@@ -224,11 +224,13 @@ public class Peer extends Node {
                 log.info("Received {} response for FindSuccessorRequest from {}: {}", pimResponse.getHostname(),
                         pimResponse.getType(), pimResponse);
                 peerSocket.close();
+
+                this.fingerTable.set(ftIndex, pimResponse.getPeerId());
             } catch (IOException e) {
                 log.error("Unable to send FindSuccessorRequest to {}: {}", this.successor.getHostname(), e.getMessage());
             }
         }
-
+        log.info("Finished updating finger table: {}", this.fingerTable);
     }
 
     public void printFingerTable() {

@@ -206,29 +206,33 @@ public class Peer extends Node {
         log.info("Sending volley of queries to update our finger table...");
         for (int ftIndex = 0; ftIndex < fingerTable.size(); ftIndex++) {
             int ringPosition = fingerTable.ringPositionOfIndex(ftIndex);
-            String id = HashUtil.intToHex(ringPosition);
-            FindSuccessorRequest request = new FindSuccessorRequest(
-                    Host.getHostname(),
-                    Host.getIpAddress(),
-                    id,
-                    this.identifier
-            );
 
-            try {
-                log.info("Requesting successor of finger table index {}, id={}, ringPosition={}, from {}",
-                        ftIndex, id, ringPosition, this.successor.getHostname());
-                Socket peerSocket = Client.sendMessage(this.successor.getHostname(), Constants.Peer.PORT, request);
-                DataInputStream dataInputStream = new DataInputStream(peerSocket.getInputStream());
-                PeerIdentifierMessage pimResponse = (PeerIdentifierMessage) MessageFactory.getInstance()
-                        .createMessage(dataInputStream);
-                log.info("Received {} response for FindSuccessorRequest from {}: {}", pimResponse.getHostname(),
-                        pimResponse.getType(), pimResponse);
-                peerSocket.close();
+            if (!fingerTable.isBetween(ringPosition, identifier.value(), successor.value())) {
+                String id = HashUtil.intToHex(ringPosition);
+                FindSuccessorRequest request = new FindSuccessorRequest(
+                        Host.getHostname(),
+                        Host.getIpAddress(),
+                        id,
+                        this.identifier
+                );
 
-                this.fingerTable.set(ftIndex, pimResponse.getPeerId());
-            } catch (IOException e) {
-                log.error("Unable to send FindSuccessorRequest to {}: {}", this.successor.getHostname(), e.getMessage());
+                try {
+                    log.info("Requesting successor of finger table index {}, id={}, ringPosition={}, from {}",
+                            ftIndex, id, ringPosition, this.successor.getHostname());
+                    Socket peerSocket = Client.sendMessage(this.successor.getHostname(), Constants.Peer.PORT, request);
+                    DataInputStream dataInputStream = new DataInputStream(peerSocket.getInputStream());
+                    PeerIdentifierMessage pimResponse = (PeerIdentifierMessage) MessageFactory.getInstance()
+                            .createMessage(dataInputStream);
+                    log.info("Received {} response for FindSuccessorRequest from {}: {}", pimResponse.getHostname(),
+                            pimResponse.getType(), pimResponse);
+                    peerSocket.close();
+
+                    this.fingerTable.set(ftIndex, pimResponse.getPeerId());
+                } catch (IOException e) {
+                    log.error("Unable to send FindSuccessorRequest to {}: {}", this.successor.getHostname(), e.getMessage());
+                }
             }
+
         }
         log.info("Finished updating finger table: {}", this.fingerTable);
     }

@@ -110,7 +110,7 @@ public class PeerProcessor extends Processor {
 
             // Forward GetSuccessorRequest Message to next best peer in finger table
             Identifier nextBestSuccessor = ourFingerTable.successor(id);
-            log.info("We don't know the final successor of id {}, forwarding request to next best successor {}",
+            log.info("We don't know the final successor of id {}; next best successor is peer: {}",
                     message.getId(), nextBestSuccessor);
             if (!nextBestSuccessor.equals(this.peer.getIdentifier())) {
                 try {

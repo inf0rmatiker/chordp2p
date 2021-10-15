@@ -55,6 +55,8 @@ public class MessageFactory {
                 case NETWORK_JOIN_NOTIFICATION: return new NetworkJoinNotification(dataInputStream);
                 case NETWORK_EXIT_NOTIFICATION: return new NetworkExitNotification(dataInputStream);
                 case FIND_SUCCESSOR_REQUEST: return new FindSuccessorRequest(dataInputStream);
+                case PREDECESSOR_NOTIFICATION: return new PredecessorNotification(dataInputStream);
+                case SUCCESSOR_NOTIFICATION: return new SuccessorNotification(dataInputStream);
                 default: return null;
             }
         } else {

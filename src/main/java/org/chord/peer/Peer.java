@@ -83,6 +83,7 @@ public class Peer extends Node {
             Socket clientSocket = Client.sendMessage(this.discoveryNodeHostname, this.discoveryNodePort, registerRequest);
             DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream());
             RegisterPeerResponse rprResponse = (RegisterPeerResponse) MessageFactory.getInstance().createMessage(dataInputStream);
+            log.info("Received {} Message: {}", rprResponse.getType(), rprResponse);
             clientSocket.close(); // done talking to discovery server
 
             if (rprResponse.getIsValidRequest()) {
@@ -114,6 +115,7 @@ public class Peer extends Node {
                     dataInputStream = new DataInputStream(peerSocket.getInputStream());
                     PeerIdentifierMessage pimResponse = (PeerIdentifierMessage) MessageFactory.getInstance()
                             .createMessage(dataInputStream);
+                    log.info("Received {} Message: {}", pimResponse.getType(), pimResponse);
                     peerSocket.close();
                     this.successor = pimResponse.getPeerId();
 
@@ -126,6 +128,7 @@ public class Peer extends Node {
                     peerSocket = Client.sendMessage(this.successor.getHostname(), Constants.Peer.PORT, gpRequest);
                     dataInputStream = new DataInputStream(peerSocket.getInputStream());
                     pimResponse = (PeerIdentifierMessage) MessageFactory.getInstance().createMessage(dataInputStream);
+                    log.info("Received {} Message: {}", pimResponse.getType(), pimResponse);
                     peerSocket.close();
                     this.predecessor = pimResponse.getPeerId();
 

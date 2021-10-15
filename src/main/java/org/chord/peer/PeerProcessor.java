@@ -112,15 +112,18 @@ public class PeerProcessor extends Processor {
             Identifier nextBestSuccessor = ourFingerTable.successor(id);
             log.info("We don't know the final successor of id {}, forwarding request to next best successor {}",
                     message.getId(), nextBestSuccessor);
-
-            try {
-                Socket clientSocket = Client.sendMessage(nextBestSuccessor.getHostname(), Constants.Peer.PORT, message);
-                DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream());
-                response = (PeerIdentifierMessage) MessageFactory.getInstance().createMessage(dataInputStream);
-                clientSocket.close(); // done talking with next best successor peer
-            } catch (IOException e) {
-                log.error("Failed to forward GetSuccessorRequest Message to {}: {}", nextBestSuccessor.getHostname(),
-                        e.getMessage());
+            if (!nextBestSuccessor.equals(this.peer.getIdentifier())) {
+                try {
+                    Socket clientSocket = Client.sendMessage(nextBestSuccessor.getHostname(), Constants.Peer.PORT, message);
+                    DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream());
+                    response = (PeerIdentifierMessage) MessageFactory.getInstance().createMessage(dataInputStream);
+                    clientSocket.close(); // done talking with next best successor peer
+                } catch (IOException e) {
+                    log.error("Failed to forward GetSuccessorRequest Message to {}: {}", nextBestSuccessor.getHostname(),
+                            e.getMessage());
+                }
+            } else { // We are the successor of k
+                response = new PeerIdentifierMessage(Host.getHostname(), Host.getIpAddress(), nextBestSuccessor);
             }
         }
 

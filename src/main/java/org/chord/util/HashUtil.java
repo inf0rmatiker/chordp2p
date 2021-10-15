@@ -50,7 +50,7 @@ public class HashUtil {
      * @return Integer representation of that value
      */
     public static Integer hexToInt(String hex) {
-        return Integer.parseInt(hex, 16);
+        return Integer.parseUnsignedInt(hex, 16);
     }
 
 }

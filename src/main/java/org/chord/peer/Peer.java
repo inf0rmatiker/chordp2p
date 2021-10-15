@@ -123,11 +123,27 @@ public class Peer extends Node {
                             Host.getHostname(),
                             Host.getIpAddress()
                     );
-                    peerSocket = Client.sendMessage(randomPeerHost, Constants.Peer.PORT, gpRequest);
+                    peerSocket = Client.sendMessage(this.successor.getHostname(), Constants.Peer.PORT, gpRequest);
                     dataInputStream = new DataInputStream(peerSocket.getInputStream());
                     pimResponse = (PeerIdentifierMessage) MessageFactory.getInstance().createMessage(dataInputStream);
                     peerSocket.close();
                     this.predecessor = pimResponse.getPeerId();
+
+                    // Notify our successor that we are its new predecessor
+                    PredecessorNotification predecessorNotification = new PredecessorNotification(
+                            Host.getHostname(),
+                            Host.getIpAddress(),
+                            this.identifier
+                    );
+                    Client.sendMessage(this.successor.getHostname(), Constants.Peer.PORT, predecessorNotification).close();
+
+                    // Notify our predecessor that we are its new successor
+                    SuccessorNotification successorNotification = new SuccessorNotification(
+                            Host.getHostname(),
+                            Host.getIpAddress(),
+                            this.identifier
+                    );
+                    Client.sendMessage(this.predecessor.getHostname(), Constants.Peer.PORT, successorNotification).close();
                 }
             } else {
                 // TODO: Generate new id and retry
@@ -162,6 +178,10 @@ public class Peer extends Node {
         } catch (IOException e) {
             log.error("Unable to send NetworkExitNotification: {}", e.getLocalizedMessage());
         }
+    }
+
+    public synchronized void updateFingerTable(Identifier newPeer) {
+        this.fingerTable.updateWithSuccessor(newPeer);
     }
 
     public void printFingerTable() {

@@ -54,6 +54,10 @@ public class FingerTable {
         this.peerIds.set(index, peerId);
     }
 
+    public int size() {
+        return this.peerIds.size();
+    }
+
     /**
      * Converts a number of hops to an exponential representation.
      * @param i The number of hops we are making.
@@ -106,15 +110,11 @@ public class FingerTable {
      */
     public boolean knowsFinalSuccessorOf(String id) {
         int k = Identifier.valueOf(id);
-        int p = identifier.value();
-        if (p == k) return true;
+        int us = identifier.value();
+        if (us == k) return true;
 
         int firstSuccessor = peerIds.get(0).value();
-        if (p < firstSuccessor) {
-            return p < k && k <= firstSuccessor;
-        } else { // p > firstSuccessor
-            return p < k || k <= firstSuccessor;
-        }
+        return (isSuccessorOf(firstSuccessor, k));
     }
 
     /**
@@ -125,10 +125,21 @@ public class FingerTable {
      */
     public boolean isSuccessorOf(int p, int k) {
         int us = this.identifier.value();
-        if (p > us) { // if range does not wrap
-            return (k > us && k <= p);
-        } else { // range wraps, i.e. (p < us)
-            return (k > us || k <= p);
+        return isBetween(k, us, p);
+    }
+
+    /**
+     * Checks if, within a ring-based index structure, k is between range i and j.
+     * @param k Number we are checking
+     * @param i Beginning of range
+     * @param j End of range
+     * @return True if k is between i and j, false otherwise
+     */
+    public boolean isBetween(int k, int i, int j) {
+        if (i <= j) {
+            return i < k && k <= j;
+        } else {
+            return i < k || k <= j;
         }
     }
 
@@ -165,11 +176,14 @@ public class FingerTable {
      * @param successorId Identifier of our new successor
      */
     public void updateWithSuccessor(Identifier successorId) {
-        int successor = successorId.value();
+        int newSuccessor = successorId.value();
         for (int ftIndex = 0; ftIndex < this.peerIds.size(); ftIndex++) {
             int k = ringPositionOfIndex(ftIndex);
-            if (isSuccessorOf(successor, k)) {
+            int currentSuccessor = this.peerIds.get(ftIndex).value();
+            if (isBetween(newSuccessor, k, currentSuccessor)) {
                 this.peerIds.set(ftIndex, successorId);
+                log.info("Updated successor for finger table index={}, position={}, from {} to {}", ftIndex, k,
+                        currentSuccessor, newSuccessor);
             }
         }
     }

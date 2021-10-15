@@ -52,4 +52,5 @@ public class HashUtil {
     public static Integer hexToInt(String hex) {
         return Integer.parseInt(hex, 16);
     }
+
 }

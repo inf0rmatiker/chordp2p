@@ -49,6 +49,9 @@ public class PeerProcessor extends Processor {
                 case SUCCESSOR_NOTIFICATION:
                     processSuccessorNotification((SuccessorNotification) message);
                     return;
+                case NETWORK_JOIN_NOTIFICATION:
+                    processNetworkJoinNotification((NetworkJoinNotification) message);
+                    return;
                 default: log.error("Unimplemented processing support for message type {}", message.getType());
             }
         } catch (IOException e) {
@@ -126,12 +129,20 @@ public class PeerProcessor extends Processor {
 
     public void processPredecessorNotification(PredecessorNotification message) throws IOException {
         this.peer.setPredecessor(message.getPeerId());
-        log.info("Set predecessor to {}", message.getPeerId());
+        log.info("Updated predecessor to peer: {}", message.getPeerId());
     }
 
     public void processSuccessorNotification(SuccessorNotification message) throws IOException {
         this.peer.setSuccessor(message.getPeerId());
-        log.info("Set successor to {}", message.getPeerId());
+        log.info("Updated successor to peer: {}", message.getPeerId());
+    }
+
+    public void processNetworkJoinNotification(NetworkJoinNotification message) throws IOException {
+        if (!message.getPeerId().equals(peer.getIdentifier())) {
+            log.info("Updating finger table with peer: {}", message.getPeerId());
+            this.peer.updateFingerTable(message.getPeerId());
+            Client.sendMessage(this.peer.getPredecessor().getHostname(), Constants.Peer.PORT, message).close();
+        }
     }
 
 }

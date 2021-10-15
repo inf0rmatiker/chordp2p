@@ -125,7 +125,7 @@ public class FingerTable {
      */
     public boolean isSuccessorOf(int p, int k) {
         int us = this.identifier.value();
-        return isBetween(k, us, p);
+        return p == k || isBetween(k, us, p);
     }
 
     /**
@@ -136,10 +136,10 @@ public class FingerTable {
      * @return True if k is between i and j, false otherwise
      */
     public boolean isBetween(int k, int i, int j) {
-        if (i <= j) {
-            return i < k && k <= j;
+        if (i < j) {
+            return i < k && k < j;
         } else {
-            return i < k || k <= j;
+            return i < k || k < j;
         }
     }
 

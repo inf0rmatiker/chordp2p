@@ -42,8 +42,6 @@ public class Identifier {
 
     @Override
     public String toString() {
-        return "\nIdentifier:\n" +
-                String.format("\thostname: %s\n", this.hostname) +
-                String.format("\tid: %s\n", this.id);
+        return String.format("{ hostname: \"%s\", id: \"%s\" (%d) }", this.hostname, this.id, this.value());
     }
 }

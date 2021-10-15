@@ -91,6 +91,7 @@ public class Peer extends Node {
             RegisterPeerResponse rprResponse = (RegisterPeerResponse) MessageFactory.getInstance().createMessage(dataInputStream);
             log.info("Received {} Message: {}", rprResponse.getType(), rprResponse);
             clientSocket.close(); // done talking to discovery server
+            updateFingerTable(rprResponse.getRandomPeerId());
 
             // We are the first node in the network
             if (rprResponse.getRandomPeerId().equals(this.identifier)) {
@@ -122,6 +123,7 @@ public class Peer extends Node {
                 log.info("Received {} Message: {}", pimResponse.getType(), pimResponse);
                 peerSocket.close();
                 this.successor = pimResponse.getPeerId();
+                updateFingerTable(this.successor);
 
                 // Now that we know our successor peer, we can directly query its known predecessor
                 // which will become our predecessor
@@ -135,6 +137,7 @@ public class Peer extends Node {
                 log.info("Received {} Message: {}", pimResponse.getType(), pimResponse);
                 peerSocket.close();
                 this.predecessor = pimResponse.getPeerId();
+                updateFingerTable(this.predecessor);
 
                 // Notify our successor that we are its new predecessor
                 PredecessorNotification predecessorNotification = new PredecessorNotification(

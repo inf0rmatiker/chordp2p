@@ -23,7 +23,7 @@ public class Client {
      * @return The Socket we sent the Message on, and on which a response may be expected
      */
     public static Socket sendMessage(String hostname, Integer port, Message message) throws IOException {
-        log.info("Sending {} Message", message.getType());
+        log.info("Sending {} Message to {}", message.getType(), hostname);
         Socket clientSocket = new Socket(hostname, port);
         clientSocket.getOutputStream().write(message.getMarshaledBytes());
         return clientSocket;

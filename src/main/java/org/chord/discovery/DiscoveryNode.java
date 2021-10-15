@@ -64,7 +64,7 @@ public class DiscoveryNode extends Node {
     }
 
     public Identifier getRandomPeer() {
-        int randomIndex = this.random.nextInt() % registeredPeers.size();
+        int randomIndex = this.random.nextInt(registeredPeers.size());
         log.debug("Choosing random index {}", randomIndex);
         return this.registeredPeers.get(randomIndex);
     }

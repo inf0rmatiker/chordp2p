@@ -30,7 +30,7 @@ public class PeerProcessor extends Processor {
 
     @Override
     public void process(Message message) {
-        log.info("Processing {} message", message.getType());
+        log.info("Processing {}...", message.getType());
 
         try {
             switch (message.getType()) {
@@ -48,6 +48,9 @@ public class PeerProcessor extends Processor {
                     return;
                 case SUCCESSOR_NOTIFICATION:
                     processSuccessorNotification((SuccessorNotification) message);
+                    return;
+                case NETWORK_JOIN_NOTIFICATION:
+                    processNetworkJoinNotification((NetworkJoinNotification) message);
                     return;
                 default: log.error("Unimplemented processing support for message type {}", message.getType());
             }
@@ -68,6 +71,8 @@ public class PeerProcessor extends Processor {
                 Host.getIpAddress(),
                 this.peer.getPredecessor()
         );
+        log.info("Responding to GetPredecessorRequest from {} with {}: {}", message.getHostname(), pimResponse.getType(),
+                pimResponse);
         sendResponse(this.socket, pimResponse);
     }
 
@@ -82,6 +87,8 @@ public class PeerProcessor extends Processor {
                 Host.getIpAddress(),
                 this.peer.getSuccessor()
         );
+        log.info("Responding to GetSuccessorRequest from {} with {}: {}", message.getHostname(), pimResponse.getType(),
+                pimResponse);
         sendResponse(this.socket, pimResponse);
     }
 
@@ -97,41 +104,114 @@ public class PeerProcessor extends Processor {
     public void processFindSuccessorRequest(FindSuccessorRequest message) throws IOException {
         FingerTable ourFingerTable = this.peer.getFingerTable();
         String id = message.getId();
-        PeerIdentifierMessage response = null;
 
-        if (ourFingerTable.knowsFinalSuccessorOf(message.getId())) {
+        if (ourFingerTable.knowsFinalSuccessorOf(id)) {
+
             Identifier finalSuccessor = ourFingerTable.successor(id);
-            response = new PeerIdentifierMessage(Host.getHostname(), Host.getIpAddress(), finalSuccessor);
-        } else {
+            log.info("The final successor of id {} is: {}", id, finalSuccessor);
+            PeerIdentifierMessage response = new PeerIdentifierMessage(
+                    Host.getHostname(),
+                    Host.getIpAddress(),
+                    finalSuccessor
+            );
+            sendResponse(this.socket, response);
 
-            // Forward GetSuccessorRequest Message to next best peer in finger table
+        } else { // We don't know the final successor of k, so forward request to next best successor in finger table
+
             Identifier nextBestSuccessor = ourFingerTable.successor(id);
-            try {
-                Socket clientSocket = Client.sendMessage(nextBestSuccessor.getHostname(), Constants.Peer.PORT, message);
-                DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream());
-                response = (PeerIdentifierMessage) MessageFactory.getInstance().createMessage(dataInputStream);
-                clientSocket.close(); // done talking with next best successor peer
-            } catch (IOException e) {
-                log.error("Failed to forward GetSuccessorRequest Message to {}: {}", nextBestSuccessor.getHostname(),
-                        e.getMessage());
-            }
-        }
+            log.info("The next best successor we know of {} is: {}", id, nextBestSuccessor);
 
-        if (response != null) {
-            sendResponse(this.socket, response); // return response from upstream to requester
-        } else {
-            log.error("GetSuccessorResponse is null!");
+            if (nextBestSuccessor.equals(this.peer.getIdentifier())) {
+
+                log.info("Next best successor of {} is us; returning {} as final successor", id,
+                        this.peer.getIdentifier());
+                PeerIdentifierMessage response = new PeerIdentifierMessage(
+                        Host.getHostname(),
+                        Host.getIpAddress(),
+                        nextBestSuccessor
+                );
+                sendResponse(this.socket, response);
+
+            } else if (nextBestSuccessor.equals(message.getRequesterId())) {
+
+                log.info("Next best successor of {} is the requester; returning {} as final successor", id,
+                        message.getRequesterId());
+                PeerIdentifierMessage response = new PeerIdentifierMessage(
+                        Host.getHostname(),
+                        Host.getIpAddress(),
+                        nextBestSuccessor
+                );
+                sendResponse(this.socket, response);
+
+            } else  { // forward request to next best successor
+
+                try {
+                    log.info("Forwarding FindSuccessorRequest message from {} to {}: {}", message.getHostname(),
+                            nextBestSuccessor.getHostname(), message);
+
+                    // Change message's hostname/ip address to ours and re-marshal
+                    message.hostname = Host.getHostname();
+                    message.ipAddress = Host.getIpAddress();
+                    message.marshal();
+                    if (this.socket.isClosed()) {
+                        log.error("Socket has been closed 0!!!");
+                    }
+
+                    // Open Socket to next best successor, request successor(k), get response, re-marshal it
+                    Socket successorSocket = Client.sendMessage(nextBestSuccessor.getHostname(), Constants.Peer.PORT, message);
+                    DataInputStream dataInputStream = new DataInputStream(successorSocket.getInputStream());
+                    PeerIdentifierMessage response = (PeerIdentifierMessage) MessageFactory.getInstance().
+                            createMessage(dataInputStream);
+                    response.marshal(); // important! received message is not automatically marshaled
+                    dataInputStream.close();
+                    successorSocket.close(); // done talking with next best successor peer
+
+                    // Return response to original requester
+                    log.info("Received final result of FindSuccessorRequest from {}: {}", response.getHostname(), response);
+                    if (this.socket.isClosed()) {
+                        log.error("Socket has been closed 1!!!");
+                    }
+                    sendResponse(this.socket, response);
+
+                } catch (IOException e) {
+                    log.error("Failed to forward FindSuccessorRequest Message to {}: {}", nextBestSuccessor.getHostname(),
+                            e.getMessage());
+                }
+            }
         }
     }
 
     public void processPredecessorNotification(PredecessorNotification message) throws IOException {
         this.peer.setPredecessor(message.getPeerId());
-        log.info("Set predecessor to {}", message.getPeerId());
+        log.info("Updated predecessor to peer: {}", message.getPeerId());
+        this.peer.updateFingerTable(message.getPeerId());
+        sendResponse(this.socket, new StatusMessage(
+                Host.getHostname(),
+                Host.getIpAddress(),
+                Message.Status.OK
+        ));
     }
 
     public void processSuccessorNotification(SuccessorNotification message) throws IOException {
         this.peer.setSuccessor(message.getPeerId());
-        log.info("Set successor to {}", message.getPeerId());
+        log.info("Updated successor to peer: {}", message.getPeerId());
+        this.peer.updateFingerTable(message.getPeerId());
+        sendResponse(this.socket, new StatusMessage(
+                Host.getHostname(),
+                Host.getIpAddress(),
+                Message.Status.OK
+        ));
+    }
+
+    public void processNetworkJoinNotification(NetworkJoinNotification message) throws IOException {
+        if (!message.getPeerId().equals(this.peer.getIdentifier())) {
+            log.info("Updating finger table with peer: {}", message.getPeerId());
+            this.peer.updateFingerTable(message.getPeerId());
+            log.debug("NetworkJoinNotification Message: {}", message);
+            if (!message.getPeerId().equals(this.peer.getPredecessor())) {
+                Client.sendMessage(this.peer.getPredecessor().getHostname(), Constants.Peer.PORT, message).close();
+            }
+        }
     }
 
 }

@@ -38,7 +38,7 @@ public class RegisterPeerRequest extends PeerIdentifierMessage {
 
     @Override
     public String toString() {
-        return "RegisterPeerRequest:\n" +
+        return "\nRegisterPeerRequest:\n" +
                 String.format("\tid: %s\n", this.peerId);
     }
 }

@@ -61,7 +61,8 @@ public class PeerIdentifierMessage extends Message {
 
     @Override
     public String toString() {
-        return "PeerIdentifierMessage:\n" +
+        return "\nPeerIdentifierMessage:\n" +
                 String.format("\tpeerId: %s\n", this.peerId);
     }
+
 }

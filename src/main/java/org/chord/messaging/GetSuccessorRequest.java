@@ -40,6 +40,6 @@ public class GetSuccessorRequest extends Message {
 
     @Override
     public String toString() {
-        return "GetSuccessorRequest\n";
+        return "\nGetSuccessorRequest\n";
     }
 }

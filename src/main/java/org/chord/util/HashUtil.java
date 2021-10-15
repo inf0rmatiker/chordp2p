@@ -50,6 +50,20 @@ public class HashUtil {
      * @return Integer representation of that value
      */
     public static Integer hexToInt(String hex) {
-        return Integer.parseInt(hex, 16);
+        return Integer.parseUnsignedInt(hex, 16);
     }
+
+    /**
+     * Converts an int to a length-4 hex value
+     * @param val integer to convert
+     * @return converted String
+     */
+    public static String intToHex(Integer val) {
+        StringBuilder sb = new StringBuilder(Integer.toHexString(val));
+        while (sb.length() < 4) {
+            sb.insert(0, "0");
+        }
+        return sb.toString();
+    }
+
 }

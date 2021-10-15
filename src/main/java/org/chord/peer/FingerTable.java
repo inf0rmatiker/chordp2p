@@ -54,6 +54,10 @@ public class FingerTable {
         this.peerIds.set(index, peerId);
     }
 
+    public int size() {
+        return this.peerIds.size();
+    }
+
     /**
      * Converts a number of hops to an exponential representation.
      * @param i The number of hops we are making.
@@ -106,15 +110,11 @@ public class FingerTable {
      */
     public boolean knowsFinalSuccessorOf(String id) {
         int k = Identifier.valueOf(id);
-        int p = identifier.value();
-        if (p == k) return true;
+        int us = identifier.value();
+        if (us == k) return true;
 
         int firstSuccessor = peerIds.get(0).value();
-        if (p < firstSuccessor) {
-            return p < k && k <= firstSuccessor;
-        } else { // p > firstSuccessor
-            return p < k || k <= firstSuccessor;
-        }
+        return (isSuccessorOf(firstSuccessor, k));
     }
 
     /**
@@ -125,10 +125,21 @@ public class FingerTable {
      */
     public boolean isSuccessorOf(int p, int k) {
         int us = this.identifier.value();
-        if (p > us) { // if range does not wrap
-            return (k > us && k <= p);
-        } else { // range wraps, i.e. (p < us)
-            return (k > us || k <= p);
+        return p == k || isBetween(k, us, p);
+    }
+
+    /**
+     * Checks if, within a ring-based index structure, k is between range i and j.
+     * @param k Number we are checking
+     * @param i Beginning of range
+     * @param j End of range
+     * @return True if k is between i and j, false otherwise
+     */
+    public boolean isBetween(int k, int i, int j) {
+        if (i < j) {
+            return i < k && k < j;
+        } else {
+            return i < k || k < j;
         }
     }
 
@@ -149,14 +160,17 @@ public class FingerTable {
             log.debug("successor({}): k == p, returning our own identifier", id);
             return identifier;
         } else {
-            int ftIndex = 0;
-            for (; ftIndex < peerIds.size(); ftIndex++) {
-                int successor = peerIds.get(ftIndex).value();
+            for (Identifier peerId : peerIds) {
+                int successor = peerId.value();
                 if (isSuccessorOf(successor, k)) {
-                    return peerIds.get(ftIndex);
+                    log.debug("successor({}): found successor {} of k {}", id, successor, k);
+                    return peerId;
                 }
             }
         }
+
+        log.debug("successor({}): did not find successor of k {}, returning last successor in finger table: {}",
+                id, k, peerIds.get(peerIds.size()-1));
         return peerIds.get(peerIds.size()-1); // we didn't reach k, so return the closest point we can get to it
     }
 
@@ -165,23 +179,26 @@ public class FingerTable {
      * @param successorId Identifier of our new successor
      */
     public void updateWithSuccessor(Identifier successorId) {
-        int successor = successorId.value();
+        int newSuccessor = successorId.value();
         for (int ftIndex = 0; ftIndex < this.peerIds.size(); ftIndex++) {
             int k = ringPositionOfIndex(ftIndex);
-            if (isSuccessorOf(successor, k)) {
+            int currentSuccessor = this.peerIds.get(ftIndex).value();
+            if (k == newSuccessor || isBetween(newSuccessor, k, currentSuccessor)) {
                 this.peerIds.set(ftIndex, successorId);
+                log.info("Updated successor for finger table index={}, position={}, from {} to {}", ftIndex, k,
+                        currentSuccessor, newSuccessor);
             }
         }
     }
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("FingerTable:\n");
+        StringBuilder sb = new StringBuilder("\nFingerTable:\n");
         sb.append(String.format("\tidentifier: %s\n", this.identifier));
         sb.append("\tpeerIds: [\n");
         int i = 0;
         for (Identifier peerId: this.peerIds) {
-            sb.append(String.format("\t %d : %s\n", i, peerId));
+            sb.append(String.format("\t %d (%d) : %s\n", i, ringPositionOfIndex(i), peerId));
             i++;
         }
         sb.append("\t]\n");

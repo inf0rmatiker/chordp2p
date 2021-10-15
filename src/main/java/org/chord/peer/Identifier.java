@@ -42,7 +42,7 @@ public class Identifier {
 
     @Override
     public String toString() {
-        return "Identifier:\n" +
+        return "\nIdentifier:\n" +
                 String.format("\thostname: %s\n", this.hostname) +
                 String.format("\tid: %s\n", this.id);
     }

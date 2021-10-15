@@ -39,7 +39,7 @@ public class NetworkJoinNotification extends PeerIdentifierMessage {
 
     @Override
     public String toString() {
-        return "NetworkJoinNotification:\n" +
+        return "\nNetworkJoinNotification:\n" +
                 String.format("\tpeerId: %s\n", this.peerId);
     }
 }

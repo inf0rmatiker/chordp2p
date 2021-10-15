@@ -38,7 +38,7 @@ public class SuccessorNotification extends PeerIdentifierMessage {
 
     @Override
     public String toString() {
-        return "SuccessorNotification:\n" +
+        return "\nSuccessorNotification:\n" +
                 String.format("\tpeerId: %s\n", this.peerId);
     }
 }

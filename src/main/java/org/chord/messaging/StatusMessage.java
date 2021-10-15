@@ -51,7 +51,7 @@ public class StatusMessage extends Message {
 
     @Override
     public String toString() {
-        return "StatusMessage:\n" +
+        return "\nStatusMessage:\n" +
                 String.format("\tstatus: %s\n", this.status.name());
     }
 }

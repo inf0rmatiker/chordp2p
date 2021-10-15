@@ -75,7 +75,7 @@ public class RegisterPeerResponse extends Message {
 
     @Override
     public String toString() {
-        return "RegisterPeerResponse:\n" +
+        return "\nRegisterPeerResponse:\n" +
                 String.format("\tisValidRequest: %b\n", this.isValidRequest) +
                 String.format("\trandomPeerId: %s\n", this.randomPeerId);
     }

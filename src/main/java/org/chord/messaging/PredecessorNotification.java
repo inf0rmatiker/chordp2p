@@ -39,7 +39,7 @@ public class PredecessorNotification extends PeerIdentifierMessage {
 
     @Override
     public String toString() {
-        return "PredecessorNotification:\n" +
+        return "\nPredecessorNotification:\n" +
                 String.format("\tpeerId: %s\n", this.peerId);
     }
 }

@@ -100,8 +100,8 @@ public class Peer extends Node {
 
             } else { // There are other nodes in the network
 
-                log.info("There are other nodes in the network");
                 String randomPeerHost = rprResponse.getRandomPeerId().getHostname();
+                log.info("There are other nodes in the network, contacting {} to find our successor", randomPeerHost);
 
                     /* TODO:
                         Contact random peer and get successor/predecessor node info.
@@ -114,13 +114,15 @@ public class Peer extends Node {
                 FindSuccessorRequest successorRequest = new FindSuccessorRequest(
                         Host.getHostname(),
                         Host.getIpAddress(),
-                        this.identifier.getId()
+                        this.identifier.getId(),
+                        this.identifier
                 );
                 Socket peerSocket = Client.sendMessage(randomPeerHost, Constants.Peer.PORT, successorRequest);
                 dataInputStream = new DataInputStream(peerSocket.getInputStream());
                 PeerIdentifierMessage pimResponse = (PeerIdentifierMessage) MessageFactory.getInstance()
                         .createMessage(dataInputStream);
-                log.info("Received {} Message: {}", pimResponse.getType(), pimResponse);
+                log.info("Received {} response for FindSuccessorRequest from {}: {}", pimResponse.getType(),
+                        pimResponse.getHostname(), pimResponse);
                 peerSocket.close();
                 this.successor = pimResponse.getPeerId();
                 updateFingerTable(this.successor);
@@ -134,7 +136,8 @@ public class Peer extends Node {
                 peerSocket = Client.sendMessage(this.successor.getHostname(), Constants.Peer.PORT, gpRequest);
                 dataInputStream = new DataInputStream(peerSocket.getInputStream());
                 pimResponse = (PeerIdentifierMessage) MessageFactory.getInstance().createMessage(dataInputStream);
-                log.info("Received {} Message: {}", pimResponse.getType(), pimResponse);
+                log.info("Received {} response for GetPredecessorRequest from {}: {}", pimResponse.getHostname(),
+                        pimResponse.getType(), pimResponse);
                 peerSocket.close();
                 this.predecessor = pimResponse.getPeerId();
                 updateFingerTable(this.predecessor);
@@ -145,6 +148,7 @@ public class Peer extends Node {
                         Host.getIpAddress(),
                         this.identifier
                 );
+                log.info("Notifying our successor {} that we are its new predecessor", this.successor.getHostname());
                 Client.waitForStatusResponseAndClose(
                         Client.sendMessage(this.successor.getHostname(), Constants.Peer.PORT, predecessorNotification)
                 );
@@ -155,6 +159,7 @@ public class Peer extends Node {
                         Host.getIpAddress(),
                         this.identifier
                 );
+                log.info("Notifying our predecessor {} that we are its new successor", this.predecessor.getHostname());
                 Client.waitForStatusResponseAndClose(
                         Client.sendMessage(this.predecessor.getHostname(), Constants.Peer.PORT, successorNotification)
                 );
@@ -163,6 +168,7 @@ public class Peer extends Node {
                 Client.sendMessage(this.successor.getHostname(), Constants.Peer.PORT, notification).close();
             }
 
+            log.info("Notifying discovery server {} that we have fully joined the network", this.discoveryNodeHostname);
             Client.sendMessage(this.discoveryNodeHostname, this.discoveryNodePort, notification).close();
 
         } catch (IOException e) {
@@ -188,7 +194,9 @@ public class Peer extends Node {
     }
 
     public synchronized void updateFingerTable(Identifier newPeer) {
+        log.info("Updating our finger table with peer: {}", newPeer);
         this.fingerTable.updateWithSuccessor(newPeer);
+        log.info("Our finger table after update: {}", this.fingerTable);
     }
 
     public void printFingerTable() {

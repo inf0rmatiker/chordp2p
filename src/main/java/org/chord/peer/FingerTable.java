@@ -193,7 +193,7 @@ public class FingerTable {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("FingerTable:\n");
+        StringBuilder sb = new StringBuilder("\nFingerTable:\n");
         sb.append(String.format("\tidentifier: %s\n", this.identifier));
         sb.append("\tpeerIds: [\n");
         int i = 0;

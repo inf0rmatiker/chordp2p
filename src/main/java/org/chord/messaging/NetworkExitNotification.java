@@ -35,7 +35,7 @@ public class NetworkExitNotification extends PeerIdentifierMessage {
 
     @Override
     public String toString() {
-        return "NetworkExitNotification:\n" +
+        return "\nNetworkExitNotification:\n" +
                 String.format("\tpeerId: %s\n", this.peerId);
     }
 }

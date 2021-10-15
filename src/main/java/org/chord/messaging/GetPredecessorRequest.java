@@ -41,6 +41,6 @@ public class GetPredecessorRequest extends Message {
 
     @Override
     public String toString() {
-        return "GetPredecessorRequest\n";
+        return "\nGetPredecessorRequest\n";
     }
 }

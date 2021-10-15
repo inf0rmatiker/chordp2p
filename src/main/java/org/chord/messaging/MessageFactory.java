@@ -57,6 +57,7 @@ public class MessageFactory {
                 case FIND_SUCCESSOR_REQUEST: return new FindSuccessorRequest(dataInputStream);
                 case PREDECESSOR_NOTIFICATION: return new PredecessorNotification(dataInputStream);
                 case SUCCESSOR_NOTIFICATION: return new SuccessorNotification(dataInputStream);
+                case STATUS_MESSAGE: return new StatusMessage(dataInputStream);
                 default: return null;
             }
         } else {

@@ -137,11 +137,21 @@ public class PeerProcessor extends Processor {
     public void processPredecessorNotification(PredecessorNotification message) throws IOException {
         this.peer.setPredecessor(message.getPeerId());
         log.info("Updated predecessor to peer: {}", message.getPeerId());
+        sendResponse(this.socket, new StatusMessage(
+                Host.getHostname(),
+                Host.getIpAddress(),
+                Message.Status.OK
+        ));
     }
 
     public void processSuccessorNotification(SuccessorNotification message) throws IOException {
         this.peer.setSuccessor(message.getPeerId());
         log.info("Updated successor to peer: {}", message.getPeerId());
+        sendResponse(this.socket, new StatusMessage(
+                Host.getHostname(),
+                Host.getIpAddress(),
+                Message.Status.OK
+        ));
     }
 
     public void processNetworkJoinNotification(NetworkJoinNotification message) throws IOException {

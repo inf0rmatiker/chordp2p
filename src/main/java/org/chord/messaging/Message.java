@@ -20,7 +20,11 @@ public abstract class Message {
     public enum MessageType {
         REGISTER_PEER_REQUEST, REGISTER_PEER_RESPONSE, PEER_IDENTIFIER_MESSAGE, GET_PREDECESSOR_REQUEST,
         GET_SUCCESSOR_REQUEST, NETWORK_JOIN_NOTIFICATION, NETWORK_EXIT_NOTIFICATION, FIND_SUCCESSOR_REQUEST,
-        PREDECESSOR_NOTIFICATION, SUCCESSOR_NOTIFICATION
+        PREDECESSOR_NOTIFICATION, SUCCESSOR_NOTIFICATION, STATUS_MESSAGE
+    }
+
+    public enum Status {
+        OK, WARNING, ERROR
     }
 
     public abstract MessageType getType();
@@ -279,6 +283,7 @@ public abstract class Message {
             case 7: return MessageType.FIND_SUCCESSOR_REQUEST;
             case 8: return MessageType.PREDECESSOR_NOTIFICATION;
             case 9: return MessageType.SUCCESSOR_NOTIFICATION;
+            case 10: return MessageType.STATUS_MESSAGE;
             default: return null;
         }
     }
@@ -304,6 +309,7 @@ public abstract class Message {
             case FIND_SUCCESSOR_REQUEST: return 7;
             case PREDECESSOR_NOTIFICATION: return 8;
             case SUCCESSOR_NOTIFICATION: return 9;
+            case STATUS_MESSAGE: return 10;
             default: return -1;
         }
     }

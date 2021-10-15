@@ -157,11 +157,12 @@ public class PeerProcessor extends Processor {
                         log.error("Socket has been closed 0!!!");
                     }
 
-                    // Open Socket to next best successor, request successor(k), get response
+                    // Open Socket to next best successor, request successor(k), get response, re-marshal it
                     Socket successorSocket = Client.sendMessage(nextBestSuccessor.getHostname(), Constants.Peer.PORT, message);
                     DataInputStream dataInputStream = new DataInputStream(successorSocket.getInputStream());
                     PeerIdentifierMessage response = (PeerIdentifierMessage) MessageFactory.getInstance().
                             createMessage(dataInputStream);
+                    response.marshal(); // important! received message is not automatically marshaled
                     dataInputStream.close();
                     successorSocket.close(); // done talking with next best successor peer
 

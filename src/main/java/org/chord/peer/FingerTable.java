@@ -183,7 +183,7 @@ public class FingerTable {
         for (int ftIndex = 0; ftIndex < this.peerIds.size(); ftIndex++) {
             int k = ringPositionOfIndex(ftIndex);
             int currentSuccessor = this.peerIds.get(ftIndex).value();
-            if (isBetween(newSuccessor, k, currentSuccessor)) {
+            if (k == newSuccessor || isBetween(newSuccessor, k, currentSuccessor)) {
                 this.peerIds.set(ftIndex, successorId);
                 log.info("Updated successor for finger table index={}, position={}, from {} to {}", ftIndex, k,
                         currentSuccessor, newSuccessor);
@@ -198,7 +198,7 @@ public class FingerTable {
         sb.append("\tpeerIds: [\n");
         int i = 0;
         for (Identifier peerId: this.peerIds) {
-            sb.append(String.format("\t %d : %s\n", i, peerId));
+            sb.append(String.format("\t %d (%d) : %s\n", i, ringPositionOfIndex(i), peerId));
             i++;
         }
         sb.append("\t]\n");

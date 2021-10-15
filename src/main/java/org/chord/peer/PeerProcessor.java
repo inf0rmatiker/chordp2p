@@ -158,6 +158,7 @@ public class PeerProcessor extends Processor {
     public void processPredecessorNotification(PredecessorNotification message) throws IOException {
         this.peer.setPredecessor(message.getPeerId());
         log.info("Updated predecessor to peer: {}", message.getPeerId());
+        this.peer.updateFingerTable(message.getPeerId());
         sendResponse(this.socket, new StatusMessage(
                 Host.getHostname(),
                 Host.getIpAddress(),
@@ -168,6 +169,7 @@ public class PeerProcessor extends Processor {
     public void processSuccessorNotification(SuccessorNotification message) throws IOException {
         this.peer.setSuccessor(message.getPeerId());
         log.info("Updated successor to peer: {}", message.getPeerId());
+        this.peer.updateFingerTable(message.getPeerId());
         sendResponse(this.socket, new StatusMessage(
                 Host.getHostname(),
                 Host.getIpAddress(),

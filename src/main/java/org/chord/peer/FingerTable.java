@@ -160,14 +160,17 @@ public class FingerTable {
             log.debug("successor({}): k == p, returning our own identifier", id);
             return identifier;
         } else {
-            int ftIndex = 0;
-            for (; ftIndex < peerIds.size(); ftIndex++) {
-                int successor = peerIds.get(ftIndex).value();
+            for (Identifier peerId : peerIds) {
+                int successor = peerId.value();
                 if (isSuccessorOf(successor, k)) {
-                    return peerIds.get(ftIndex);
+                    log.debug("successor({}): found successor {} of k {}", id, successor, k);
+                    return peerId;
                 }
             }
         }
+
+        log.debug("successor({}): did not find successor of k {}, returning last successor in finger table: {}",
+                id, k, peerIds.get(peerIds.size()-1));
         return peerIds.get(peerIds.size()-1); // we didn't reach k, so return the closest point we can get to it
     }
 

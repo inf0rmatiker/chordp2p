@@ -157,9 +157,7 @@ public class Peer extends Node {
                 );
 
                 // Notify discovery server of successful network join
-                Client.waitForResponseAndClose(
-                        Client.sendMessage(this.successor.getHostname(), Constants.Peer.PORT, notification)
-                );
+                Client.sendMessage(this.successor.getHostname(), Constants.Peer.PORT, notification);
             }
 
             Client.sendMessage(this.discoveryNodeHostname, this.discoveryNodePort, notification).close();

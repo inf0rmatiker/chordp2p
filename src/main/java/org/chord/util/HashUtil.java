@@ -3,8 +3,33 @@ package org.chord.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 public class HashUtil {
     private static final Logger log = LoggerFactory.getLogger(HashUtil.class);
+
+    /**
+     * Calculates the 16-bit digest for a given array of bytes
+     * Returns the hex representation of the digest
+     * @param fileBytes
+     * @return
+     */
+    public static String hashFile(byte[] fileBytes) {
+        byte[] hash = null;
+        MessageDigest md = null;
+        try {
+            md = MessageDigest.getInstance("SHA-1");
+            md.update(fileBytes);
+            hash = md.digest();
+        } catch (NoSuchAlgorithmException e) {
+            log.error(e.getLocalizedMessage());
+        }
+
+        // TODO: find a better way to calculate a 16-bit hash
+        return bytesToHex(hash).substring(0, 4);
+    }
 
     /**
      * Converts a set of bytes into a Hexadecimal representation.

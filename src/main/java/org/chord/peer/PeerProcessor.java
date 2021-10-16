@@ -3,6 +3,7 @@ package org.chord.peer;
 import org.chord.messaging.FindSuccessorRequest;
 import org.chord.messaging.GetPredecessorRequest;
 import org.chord.messaging.GetSuccessorRequest;
+import org.chord.messaging.LookupRequest;
 import org.chord.messaging.Message;
 import org.chord.messaging.MessageFactory;
 import org.chord.messaging.NetworkJoinNotification;
@@ -61,12 +62,24 @@ public class PeerProcessor extends Processor {
                 case NETWORK_JOIN_NOTIFICATION:
                     processNetworkJoinNotification((NetworkJoinNotification) message);
                     return;
+                case LOOKUP_REQUEST:
+                    processLookupRequest((LookupRequest) message);
+                    break;
                 default: log.error("Unimplemented processing support for message type {}", message.getType());
             }
         } catch (IOException e) {
             log.error("Encountered IOException when processing {}: {}", message.getType(), e.getMessage());
         }
 
+    }
+
+    /**
+     * Processes a LookupRequest Message by sending the most matching peer for given fileId
+     * @param message LookupRequest Message
+     */
+    private void processLookupRequest(LookupRequest message) {
+        String fileId = message.fileId;
+        log.info("lookup({})", fileId);
     }
 
     /**

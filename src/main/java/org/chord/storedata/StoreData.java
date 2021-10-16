@@ -3,12 +3,14 @@ package org.chord.storedata;
 import org.chord.messaging.GetRandomPeerRequest;
 import org.chord.messaging.GetRandomPeerResponse;
 import org.chord.messaging.LookupRequest;
+import org.chord.messaging.LookupResponse;
 import org.chord.messaging.MessageFactory;
 import org.chord.networking.Client;
 import org.chord.networking.Node;
 import org.chord.peer.Identifier;
 import org.chord.util.Constants;
 import org.chord.util.FileUtil;
+import org.chord.util.HashUtil;
 import org.chord.util.Host;
 import org.chord.util.InteractiveCommandParser;
 import org.slf4j.Logger;
@@ -49,27 +51,34 @@ public class StoreData extends Node {
         } catch (IOException e) {
             log.warn("Error reading file {}", filePath);
             log.error(e.getLocalizedMessage());
+            return;
         }
 
         // calculate 16-bit hash 'k'
-        String fileId = "";
+        String fileId = HashUtil.hashFile(fileBytes);
+        log.info("Identifier for file '{}': {}", filePath, fileId);
 
         // retrieve random peer information from discovery node
         GetRandomPeerRequest grpRequest = new GetRandomPeerRequest(Host.getHostname(), Host.getIpAddress());
         try {
             Socket clientSocket = Client.sendMessage(this.discoveryNodeHostname, this.discoveryNodePort, grpRequest);
             // send getRandomPeerRequest, wait for response
-            DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream());
-            GetRandomPeerResponse grpResponse = (GetRandomPeerResponse) MessageFactory.getInstance().createMessage(dataInputStream);
+            DataInputStream disDiscovery = new DataInputStream(clientSocket.getInputStream());
+            GetRandomPeerResponse grpResponse = (GetRandomPeerResponse) MessageFactory.getInstance().createMessage(disDiscovery);
             clientSocket.close(); // done talking to discovery node
 
-            // lookup(k) to find the most appropriate peer to store the file
+            // lookup(k) to find the most appropriate peer to store the file, wait for response
             Identifier randomPeerId = grpResponse.peerId;
             LookupRequest lookupRequest = new LookupRequest(Host.getHostname(), Host.getIpAddress(), fileId);
-            log.info("Sending lookup({}) peer {}", fileId, randomPeerId.toString());
-            Client.sendMessage(randomPeerId.hostname, Constants.Peer.PORT, lookupRequest);
+            log.info("Sending lookup({}) to peer {}", fileId, randomPeerId.toString());
+            Socket randomPeerSocket = Client.sendMessage(randomPeerId.hostname, Constants.Peer.PORT, lookupRequest);
+            DataInputStream disRandomPeer = new DataInputStream(randomPeerSocket.getInputStream());
+            LookupResponse lookupResponse = (LookupResponse) MessageFactory.getInstance().createMessage(disRandomPeer);
+            randomPeerSocket.close(); // done talking to random peer
 
             // contact the appropriate node and transfer file
+            Identifier matchingPeerId = lookupResponse.peerId;
+            log.info("Matching PeerId for FileId({}): {}", fileId, matchingPeerId);
         } catch (IOException e) {
             log.error(e.getLocalizedMessage());
         }

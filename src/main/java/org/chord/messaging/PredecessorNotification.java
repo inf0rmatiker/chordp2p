@@ -1,7 +1,6 @@
 package org.chord.messaging;
 
 import org.chord.peer.Identifier;
-import org.chord.peer.Peer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

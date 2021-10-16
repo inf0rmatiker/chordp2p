@@ -1,11 +1,9 @@
 package org.chord.storedata;
 
-import org.chord.discovery.DiscoveryNodeServer;
 import org.chord.messaging.GetRandomPeerRequest;
 import org.chord.messaging.GetRandomPeerResponse;
 import org.chord.messaging.LookupRequest;
 import org.chord.messaging.MessageFactory;
-import org.chord.messaging.PeerIdentifierMessage;
 import org.chord.networking.Client;
 import org.chord.networking.Node;
 import org.chord.peer.Identifier;

@@ -3,9 +3,8 @@ package org.chord.discovery;
 import org.chord.messaging.GetRandomPeerRequest;
 import org.chord.messaging.GetRandomPeerResponse;
 import org.chord.messaging.Message;
-import org.chord.messaging.NetworkJoinNotification;
 import org.chord.messaging.NetworkExitNotification;
-import org.chord.messaging.PeerIdentifierMessage;
+import org.chord.messaging.NetworkJoinNotification;
 import org.chord.messaging.RegisterPeerRequest;
 import org.chord.messaging.RegisterPeerResponse;
 import org.chord.networking.Processor;
@@ -15,9 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class DiscoveryNodeProcessor extends Processor {
 

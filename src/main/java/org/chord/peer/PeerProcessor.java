@@ -1,6 +1,15 @@
 package org.chord.peer;
 
-import org.chord.messaging.*;
+import org.chord.messaging.FindSuccessorRequest;
+import org.chord.messaging.GetPredecessorRequest;
+import org.chord.messaging.GetSuccessorRequest;
+import org.chord.messaging.Message;
+import org.chord.messaging.MessageFactory;
+import org.chord.messaging.NetworkJoinNotification;
+import org.chord.messaging.PeerIdentifierMessage;
+import org.chord.messaging.PredecessorNotification;
+import org.chord.messaging.StatusMessage;
+import org.chord.messaging.SuccessorNotification;
 import org.chord.networking.Client;
 import org.chord.networking.Processor;
 import org.chord.util.Constants;

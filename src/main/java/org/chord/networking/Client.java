@@ -2,7 +2,6 @@ package org.chord.networking;
 
 import org.chord.messaging.Message;
 import org.chord.messaging.MessageFactory;
-import org.chord.messaging.PeerIdentifierMessage;
 import org.chord.messaging.StatusMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

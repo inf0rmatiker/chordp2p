@@ -20,6 +20,5 @@ public class StoreDataProcessor extends Processor {
     @Override
     public void process(Message message) {
         log.info("Processing {} Message from {}", message.getType(), message.getHostname());
-        // TODO: implement
     }
 }

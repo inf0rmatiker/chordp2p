@@ -63,7 +63,7 @@ public class InteractiveCommandParser extends Thread {
         StoreData storeData = (StoreData) node;
         while (acceptingCommands) {
             nextCommand = scanner.nextLine().trim();
-            if (nextCommand.equals("add-file")) {
+            if (nextCommand.contains("add-file")) {
                 // example: add-file test.txt
                 String[] args = nextCommand.split("\\s+");
                 if (args.length == 2) {

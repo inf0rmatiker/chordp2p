@@ -2,11 +2,13 @@ package org.chord.storedata;
 
 import org.chord.discovery.DiscoveryNodeServer;
 import org.chord.messaging.GetRandomPeerRequest;
+import org.chord.messaging.LookupRequest;
 import org.chord.messaging.MessageFactory;
 import org.chord.messaging.PeerIdentifierMessage;
 import org.chord.networking.Client;
 import org.chord.networking.Node;
 import org.chord.peer.Identifier;
+import org.chord.util.Constants;
 import org.chord.util.FileUtil;
 import org.chord.util.Host;
 import org.chord.util.InteractiveCommandParser;
@@ -51,6 +53,7 @@ public class StoreData extends Node {
         }
 
         // calculate 16-bit hash 'k'
+        String fileId = "";
 
         // retrieve random peer information from discovery node
         GetRandomPeerRequest grpRequest = new GetRandomPeerRequest(Host.getHostname(), Host.getIpAddress());
@@ -64,7 +67,9 @@ public class StoreData extends Node {
 
             // lookup(k) to find the most appropriate peer to store the file
             Identifier randomPeerId = pimResponse.peerId;
-            log.info("Random peer: {}", randomPeerId.toString());
+            LookupRequest lookupRequest = new LookupRequest(Host.getHostname(), Host.getIpAddress(), fileId);
+            log.info("Sending lookup({}) peer {}", fileId, randomPeerId.toString());
+            Client.sendMessage(randomPeerId.hostname, Constants.Peer.PORT, lookupRequest);
 
             // contact the appropriate node and transfer file
         } catch (IOException e) {

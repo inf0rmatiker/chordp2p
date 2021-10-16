@@ -59,8 +59,9 @@ public class MessageFactory {
                 case SUCCESSOR_NOTIFICATION: return new SuccessorNotification(dataInputStream);
                 case STATUS_MESSAGE: return new StatusMessage(dataInputStream);
                 case GET_RANDOM_PEER_REQUEST: return new GetRandomPeerRequest(dataInputStream);
-                // case LOOKUP_REQUEST: return new LookupRequest(dataInputStream);
-                // case LOOKUP_RESPONSE: return new LookupResponse(dataInputStream);
+                case GET_RANDOM_PEER_RESPONSE: return new GetRandomPeerResponse(dataInputStream);
+                case LOOKUP_REQUEST: return new LookupRequest(dataInputStream);
+                case LOOKUP_RESPONSE: return new LookupResponse(dataInputStream);
                 default: return null;
             }
         } else {

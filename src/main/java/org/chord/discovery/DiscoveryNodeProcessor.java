@@ -1,6 +1,7 @@
 package org.chord.discovery;
 
 import org.chord.messaging.GetRandomPeerRequest;
+import org.chord.messaging.GetRandomPeerResponse;
 import org.chord.messaging.Message;
 import org.chord.messaging.NetworkJoinNotification;
 import org.chord.messaging.NetworkExitNotification;
@@ -53,7 +54,7 @@ public class DiscoveryNodeProcessor extends Processor {
     private void processGetRandomPeerRequest(GetRandomPeerRequest message) {
         log.info("StoreData ({}) requesting random peer", message.hostname);
         Identifier randomPeer = discoveryNode.getRandomPeer();
-        PeerIdentifierMessage response = new PeerIdentifierMessage(Host.getHostname(), Host.getIpAddress(), randomPeer);
+        GetRandomPeerResponse response = new GetRandomPeerResponse(Host.getHostname(), Host.getIpAddress(), randomPeer);
         sendResponse(this.socket, response);
     }
 

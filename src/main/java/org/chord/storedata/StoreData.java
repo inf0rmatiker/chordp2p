@@ -2,6 +2,7 @@ package org.chord.storedata;
 
 import org.chord.discovery.DiscoveryNodeServer;
 import org.chord.messaging.GetRandomPeerRequest;
+import org.chord.messaging.GetRandomPeerResponse;
 import org.chord.messaging.LookupRequest;
 import org.chord.messaging.MessageFactory;
 import org.chord.messaging.PeerIdentifierMessage;
@@ -61,12 +62,11 @@ public class StoreData extends Node {
             Socket clientSocket = Client.sendMessage(this.discoveryNodeHostname, this.discoveryNodePort, grpRequest);
             // send getRandomPeerRequest, wait for response
             DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream());
-            PeerIdentifierMessage pimResponse =
-                    (PeerIdentifierMessage) MessageFactory.getInstance().createMessage(dataInputStream);
+            GetRandomPeerResponse grpResponse = (GetRandomPeerResponse) MessageFactory.getInstance().createMessage(dataInputStream);
             clientSocket.close(); // done talking to discovery node
 
             // lookup(k) to find the most appropriate peer to store the file
-            Identifier randomPeerId = pimResponse.peerId;
+            Identifier randomPeerId = grpResponse.peerId;
             LookupRequest lookupRequest = new LookupRequest(Host.getHostname(), Host.getIpAddress(), fileId);
             log.info("Sending lookup({}) peer {}", fileId, randomPeerId.toString());
             Client.sendMessage(randomPeerId.hostname, Constants.Peer.PORT, lookupRequest);

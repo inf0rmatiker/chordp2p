@@ -16,7 +16,6 @@ import org.chord.messaging.SuccessorNotification;
 import org.chord.networking.Client;
 import org.chord.networking.Processor;
 import org.chord.util.Constants;
-import org.chord.util.HashUtil;
 import org.chord.util.Host;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

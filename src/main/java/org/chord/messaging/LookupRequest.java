@@ -19,9 +19,11 @@ public class LookupRequest extends Message {
     public String fileId;
 
     // same as hostname when the request is initiated by StoreData
+    // different if initiated by a peer
     public String storeDataHost;
 
     // same as ipAddress when the request is initiated by StoreAddress
+    // different if initiated by a peer
     public String storeDataIpAddress;
 
     public LookupRequest(String hostname, String ipAddress, String fileId, String storeDataHost, String storeDataIpAddress) {

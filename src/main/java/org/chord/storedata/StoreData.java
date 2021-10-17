@@ -3,7 +3,6 @@ package org.chord.storedata;
 import org.chord.messaging.GetRandomPeerRequest;
 import org.chord.messaging.GetRandomPeerResponse;
 import org.chord.messaging.LookupRequest;
-import org.chord.messaging.LookupResponse;
 import org.chord.messaging.MessageFactory;
 import org.chord.messaging.StoreFileRequest;
 import org.chord.networking.Client;

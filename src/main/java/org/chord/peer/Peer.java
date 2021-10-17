@@ -27,7 +27,6 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class Peer extends Node {
     private static final Logger log = LoggerFactory.getLogger(Peer.class);

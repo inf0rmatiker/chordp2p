@@ -63,6 +63,7 @@ public class MessageFactory {
                 case LOOKUP_REQUEST: return new LookupRequest(dataInputStream);
                 case LOOKUP_RESPONSE: return new LookupResponse(dataInputStream);
                 case STORE_FILE_REQUEST: return new StoreFileRequest(dataInputStream);
+                case MOVE_FILE_REQUEST: return new MoveFileRequest(dataInputStream);
                 default: return null;
             }
         } else {

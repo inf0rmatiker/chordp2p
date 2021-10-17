@@ -25,7 +25,8 @@ public abstract class Message {
         REGISTER_PEER_REQUEST, REGISTER_PEER_RESPONSE, PEER_IDENTIFIER_MESSAGE, GET_PREDECESSOR_REQUEST,
         GET_SUCCESSOR_REQUEST, NETWORK_JOIN_NOTIFICATION, NETWORK_EXIT_NOTIFICATION, FIND_SUCCESSOR_REQUEST,
         PREDECESSOR_NOTIFICATION, SUCCESSOR_NOTIFICATION, STATUS_MESSAGE, GET_RANDOM_PEER_REQUEST,
-        GET_RANDOM_PEER_RESPONSE, LOOKUP_REQUEST, LOOKUP_RESPONSE, STORE_FILE_REQUEST
+        GET_RANDOM_PEER_RESPONSE, LOOKUP_REQUEST, LOOKUP_RESPONSE, STORE_FILE_REQUEST, MOVE_FILE_REQUEST,
+        MOVE_FILE_RESPONSE
     }
 
     public enum Status {
@@ -306,6 +307,8 @@ public abstract class Message {
             case 13: return MessageType.LOOKUP_REQUEST;
             case 14: return MessageType.LOOKUP_RESPONSE;
             case 15: return MessageType.STORE_FILE_REQUEST;
+            case 16: return MessageType.MOVE_FILE_REQUEST;
+            case 17: return MessageType.MOVE_FILE_RESPONSE;
             default: return null;
         }
     }
@@ -337,6 +340,8 @@ public abstract class Message {
             case LOOKUP_REQUEST: return 13;
             case LOOKUP_RESPONSE: return 14;
             case STORE_FILE_REQUEST: return 15;
+            case MOVE_FILE_REQUEST: return 16;
+            case MOVE_FILE_RESPONSE: return 17;
             default: return -1;
         }
     }

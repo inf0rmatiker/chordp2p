@@ -1,5 +1,6 @@
 package org.chord.storedata;
 
+import org.chord.messaging.LookupResponse;
 import org.chord.messaging.Message;
 import org.chord.networking.Processor;
 import org.slf4j.Logger;
@@ -20,5 +21,17 @@ public class StoreDataProcessor extends Processor {
     @Override
     public void process(Message message) {
         log.info("Processing {} Message from {}", message.getType(), message.getHostname());
+        switch (message.getType()) {
+            case LOOKUP_RESPONSE:
+                processLookupResponse((LookupResponse) message);
+                break;
+            default:
+                log.warn("Unknown message type: {}", message.getType());
+        }
+    }
+
+    private void processLookupResponse(LookupResponse message) {
+        log.debug("Setting storeData.suitablePeerForCurrentFile = {}", message.peerId);
+        storeData.suitablePeerForCurrentFile = message.peerId;
     }
 }

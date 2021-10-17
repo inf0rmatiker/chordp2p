@@ -29,6 +29,10 @@ public class StoreData extends Node {
     // Hostname of the StoreData node
     public String hostname;
 
+    // Populated by StoreDataProcessor once it receives a LookupResponse
+    // TODO: think of a better solution, this is hacky
+    public Identifier suitablePeerForCurrentFile;
+
     private InteractiveCommandParser commandParser;
 
     public StoreData(String discoveryNodeHostname, int discoveryNodePort) {
@@ -36,6 +40,7 @@ public class StoreData extends Node {
         this.discoveryNodePort = discoveryNodePort;
         this.hostname = Host.getHostname();
         commandParser = new InteractiveCommandParser(this);
+        suitablePeerForCurrentFile = null;
     }
 
     public String getHostname() {
@@ -74,13 +79,23 @@ public class StoreData extends Node {
 
             log.info("Sending lookup({}) to peer {}", fileId, randomPeerId.toString());
             Socket randomPeerSocket = Client.sendMessage(randomPeerId.hostname, Constants.Peer.PORT, lookupRequest);
+            /*
             DataInputStream disRandomPeer = new DataInputStream(randomPeerSocket.getInputStream());
             LookupResponse lookupResponse = (LookupResponse) MessageFactory.getInstance().createMessage(disRandomPeer);
             randomPeerSocket.close(); // done talking to random peer
+             */
 
             // contact the appropriate node and transfer file
-            Identifier matchingPeerId = lookupResponse.peerId;
-            log.info("Matching PeerId for FileId({}): {}", fileId, matchingPeerId);
+            while (suitablePeerForCurrentFile == null) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    log.error(e.getLocalizedMessage());
+                }
+            }
+
+            // suitablePeerForCurrentFile has been populated by StoreDataProcessor
+            log.info("Matching PeerId for FileId({}): {}", fileId, suitablePeerForCurrentFile);
             System.out.println("TODO: implement file transfer");
         } catch (IOException e) {
             log.error(e.getLocalizedMessage());

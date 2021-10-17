@@ -108,8 +108,18 @@ public class PeerProcessor extends Processor {
                 ||
                 // self > key > predecessor
                 (hexToInt(p) > hexToInt(k) && hexToInt(k) > hexToInt(peer.getPredecessor().id))
+
         ) {
-            // current node is the most appropriate to store the given file
+            if (p.equals(k)) {
+                log.debug("p == k");
+            }
+
+            if ((hexToInt(p) > hexToInt(k) && hexToInt(k) > hexToInt(peer.getPredecessor().id))) {
+                log.debug("self > key > predecessor");
+            }
+
+            log.info("This Peer ({}) is the most suitable for storing file with id {}",
+                    Host.getHostname(), k);
             lookupResponse = new LookupResponse(Host.getHostname(), Host.getIpAddress(), this.peer.getIdentifier());
             try {
                 log.info("Peer {} sending LookupResponse to StoreData ({})", Host.getHostname(), storeDataHost);
@@ -131,29 +141,34 @@ public class PeerProcessor extends Processor {
 
         if (hexToInt(p) < hexToInt(k) && hexToInt(k) < hexToInt(peerIds.get(0).id)) {
             // p < k < FT(p)[1] satisfied
+            log.debug("p < k < FT(p)[1] satisfied");
             q = peerIds.get(0);
         } else {
             for (int j = 0, peerIdsSize = peerIds.size() - 1; j < peerIdsSize; j++) {
                 if (hexToInt(peerIds.get(j).id) <= hexToInt(k) && hexToInt(k) < hexToInt(peerIds.get(j + 1).id)) {
                     // q = FT(p)[j] <= k < FT(p)[j+1] satisfied
+                    log.debug("q = FT(p)[j] <= k < FT(p)[j+1] satisfied");
                     q = peerIds.get(j);
                     break;
                 }
             }
         }
 
-        assert q != null;
-        LookupRequest lookupRequest =
-                new LookupRequest(Host.getHostname(), Host.getIpAddress(), k, storeDataHost, storeDataIpAddress);
-        log.debug("storeDataHost: {}", storeDataHost);
-        log.debug("storeDataIpAddress: {}", storeDataIpAddress);
-        log.debug("q: {}", q);
-        try {
-            log.info("Forwarding LookupRequest({}) to {}", k, q.hostname);
-            Socket peerSocket = Client.sendMessage(q.hostname, Constants.Peer.PORT, lookupRequest);
-            peerSocket.close();
-        } catch (IOException e) {
-            log.error("Error forwarding LookupRequest: {}", e.getLocalizedMessage());
+        if (q == null) {
+            log.warn("No matching PeerID found for k = {}", k);
+        } else {
+            LookupRequest lookupRequest =
+                    new LookupRequest(Host.getHostname(), Host.getIpAddress(), k, storeDataHost, storeDataIpAddress);
+            log.debug("storeDataHost: {}", storeDataHost);
+            log.debug("storeDataIpAddress: {}", storeDataIpAddress);
+            log.debug("q: {}", q);
+            try {
+                log.info("Forwarding LookupRequest({}) to {}", k, q.hostname);
+                Socket peerSocket = Client.sendMessage(q.hostname, Constants.Peer.PORT, lookupRequest);
+                peerSocket.close();
+            } catch (IOException e) {
+                log.error("Error forwarding LookupRequest: {}", e.getLocalizedMessage());
+            }
         }
     }
 

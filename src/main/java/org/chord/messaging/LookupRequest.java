@@ -7,6 +7,12 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+/**
+ * Initially sent by StoreData to a random Peer. The Peer then performs a Lookup operation
+ * for given fileId (digest) and forwards the request to other Peers as needed.
+ * When the request is processed by the most suitable peer for the file, that peer will
+ * send a corresponding LookupResponse back to StoreData.
+ */
 public class LookupRequest extends Message {
     private static final Logger log = LoggerFactory.getLogger(LookupRequest.class);
 

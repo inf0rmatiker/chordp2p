@@ -13,6 +13,7 @@ import org.chord.messaging.SuccessorNotification;
 import org.chord.networking.Client;
 import org.chord.networking.Node;
 import org.chord.util.Constants;
+import org.chord.util.FileUtil;
 import org.chord.util.HashUtil;
 import org.chord.util.Host;
 import org.chord.util.InteractiveCommandParser;
@@ -20,9 +21,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.DataInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Peer extends Node {
     private static final Logger log = LoggerFactory.getLogger(Peer.class);
@@ -35,6 +39,9 @@ public class Peer extends Node {
     private Identifier predecessor;
     private Identifier successor;
 
+    // fileId (16-bit digest), fileName
+    private HashMap<String, String> storedFiles;
+
     private InteractiveCommandParser commandParser;
 
     public Peer(String discoveryNodeHostname, int discoveryNodePort, Identifier identifier) {
@@ -42,6 +49,7 @@ public class Peer extends Node {
         this.discoveryNodePort = discoveryNodePort;
         this.identifier = this.predecessor = this.successor = identifier; // init all known peers to our id
         this.fingerTable = new FingerTable(Constants.FINGER_TABLE_SIZE, identifier);
+        storedFiles = new HashMap<>();
         commandParser = new InteractiveCommandParser(this);
     }
 
@@ -205,6 +213,34 @@ public class Peer extends Node {
         }
     }
 
+    /**
+     * Stores a new file in Peer's local storage and updates tracking info
+     * @param fileId 16-bit digest file digest
+     * @param fileName
+     * @param bytes file content as byte array
+     */
+    public void storeFile(String fileId,  String fileName, byte[] bytes) throws IOException {
+        FileUtil.writeToFile(Constants.Peer.DATA_DIR + File.separator + fileName, bytes);
+        storedFiles.put(fileId, fileName);
+    }
+
+    /**
+     * Removes specified file from Peer's local storage and updates tracking info
+     * @param fileId 16-bit file digest
+     */
+    public void removeFile(String fileId) {
+        if (storedFiles.containsKey(fileId)) {
+            String fileName = storedFiles.get(fileId);
+            boolean success = FileUtil.deleteFile(Constants.Peer.DATA_DIR + File.separator + fileName);
+            if (success) {
+                storedFiles.remove(fileId);
+                log.info("Removed file {} from {}", fileName, Host.getHostname());
+            } else {
+                log.warn("Unable to remove {}", fileName);
+            }
+        }
+    }
+
     public synchronized void updateFingerTable(Identifier newPeer) {
         log.info("Updating our finger table with peer: {}", newPeer);
         this.fingerTable.updateWithSuccessor(newPeer);
@@ -248,7 +284,7 @@ public class Peer extends Node {
 
     public void printFingerTable() {
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("Finger Table for %s:\n", getHostname()));
+        sb.append(String.format("Finger Table for %s:\n", Host.getHostname()));
         List<Identifier> peerIds = this.fingerTable.peerIds;
         for (int i = 0, peerIdsSize = peerIds.size(); i < peerIdsSize; i++) {
             Identifier peerId = peerIds.get(i);

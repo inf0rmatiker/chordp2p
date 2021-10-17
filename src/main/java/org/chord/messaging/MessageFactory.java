@@ -62,6 +62,7 @@ public class MessageFactory {
                 case GET_RANDOM_PEER_RESPONSE: return new GetRandomPeerResponse(dataInputStream);
                 case LOOKUP_REQUEST: return new LookupRequest(dataInputStream);
                 case LOOKUP_RESPONSE: return new LookupResponse(dataInputStream);
+                case STORE_FILE_REQUEST: return new StoreFileRequest(dataInputStream);
                 default: return null;
             }
         } else {

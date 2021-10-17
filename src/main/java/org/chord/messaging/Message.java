@@ -154,6 +154,18 @@ public abstract class Message {
         }
     }
 
+    public static void writeByteArray(DataOutputStream dataOutputStream, byte[] bytes) throws IOException {
+        writeInt(dataOutputStream, bytes.length);
+        dataOutputStream.write(bytes);
+    }
+
+    public static byte[] readByteArray(DataInputStream dataInputStream) throws IOException {
+        int length = dataInputStream.readInt();
+        byte[] bytes =  new byte[length];
+        dataInputStream.readFully(bytes);
+        return bytes;
+    }
+
     /**
      * Reads a string List from the DataInputStream passed in as follows:
      * 1. Reads the array length as an integer n.
@@ -293,6 +305,7 @@ public abstract class Message {
             case 12: return MessageType.GET_RANDOM_PEER_RESPONSE;
             case 13: return MessageType.LOOKUP_REQUEST;
             case 14: return MessageType.LOOKUP_RESPONSE;
+            case 15: return MessageType.STORE_FILE_REQUEST;
             default: return null;
         }
     }
@@ -323,6 +336,7 @@ public abstract class Message {
             case GET_RANDOM_PEER_RESPONSE: return 12;
             case LOOKUP_REQUEST: return 13;
             case LOOKUP_RESPONSE: return 14;
+            case STORE_FILE_REQUEST: return 15;
             default: return -1;
         }
     }

@@ -11,6 +11,7 @@ import org.chord.messaging.NetworkJoinNotification;
 import org.chord.messaging.PeerIdentifierMessage;
 import org.chord.messaging.PredecessorNotification;
 import org.chord.messaging.StatusMessage;
+import org.chord.messaging.StoreFileRequest;
 import org.chord.messaging.SuccessorNotification;
 import org.chord.networking.Client;
 import org.chord.networking.Processor;
@@ -70,6 +71,9 @@ public class PeerProcessor extends Processor {
                 case LOOKUP_REQUEST:
                     processLookupRequest((LookupRequest) message);
                     break;
+                case STORE_FILE_REQUEST:
+                    processStoreFileRequest((StoreFileRequest) message);
+                    break;
                 default: log.error("Unimplemented processing support for message type {}", message.getType());
             }
         } catch (IOException e) {
@@ -78,8 +82,16 @@ public class PeerProcessor extends Processor {
 
     }
 
+    private void processStoreFileRequest(StoreFileRequest message) {
+        try {
+            this.peer.storeFile(message.fileId, message.fileName, message.bytes);
+        } catch (IOException e) {
+            log.error(e.getLocalizedMessage());
+        }
+    }
+
     /**
-     * Processes a LookupRequest Message by sending the most matching peer for given fileId
+     * Processes a LookupRequest Message by sending the most suitable peer for given fileId
      * @param message LookupRequest Message
      */
     private void processLookupRequest(LookupRequest message) {
@@ -125,6 +137,7 @@ public class PeerProcessor extends Processor {
                 if (hexToInt(peerIds.get(j).id) <= hexToInt(k) && hexToInt(k) < hexToInt(peerIds.get(j + 1).id)) {
                     // q = FT(p)[j] <= k < FT(p)[j+1] satisfied
                     q = peerIds.get(j);
+                    break;
                 }
             }
         }
@@ -132,6 +145,9 @@ public class PeerProcessor extends Processor {
         assert q != null;
         LookupRequest lookupRequest =
                 new LookupRequest(Host.getHostname(), Host.getIpAddress(), k, storeDataHost, storeDataIpAddress);
+        log.debug("storeDataHost: {}", storeDataHost);
+        log.debug("storeDataIpAddress: {}", storeDataIpAddress);
+        log.debug("q: {}", q);
         try {
             log.info("Forwarding LookupRequest({}) to {}", k, q.hostname);
             Socket peerSocket = Client.sendMessage(q.hostname, Constants.Peer.PORT, lookupRequest);

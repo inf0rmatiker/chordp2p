@@ -4,6 +4,7 @@ import org.chord.messaging.FindSuccessorRequest;
 import org.chord.messaging.GetPredecessorRequest;
 import org.chord.messaging.GetSuccessorRequest;
 import org.chord.messaging.LookupRequest;
+import org.chord.messaging.LookupResponse;
 import org.chord.messaging.Message;
 import org.chord.messaging.MessageFactory;
 import org.chord.messaging.NetworkJoinNotification;
@@ -14,6 +15,7 @@ import org.chord.messaging.SuccessorNotification;
 import org.chord.networking.Client;
 import org.chord.networking.Processor;
 import org.chord.util.Constants;
+import org.chord.util.HashUtil;
 import org.chord.util.Host;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +23,9 @@ import org.slf4j.LoggerFactory;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.List;
+
+import static org.chord.util.HashUtil.hexToInt;
 
 public class PeerProcessor extends Processor {
 
@@ -78,8 +83,58 @@ public class PeerProcessor extends Processor {
      * @param message LookupRequest Message
      */
     private void processLookupRequest(LookupRequest message) {
-        String fileId = message.fileId;
-        log.info("lookup({})", fileId);
+        String k = message.fileId;
+        String hostname = message.hostname;
+        log.info("{} initiating lookup({})", hostname, k);
+
+        String p = this.peer.getIdentifier().id;
+
+        LookupResponse lookupResponse;
+        if (p.equals(k)  // self == key
+                ||
+                // self > key > predecessor
+                (hexToInt(p) > hexToInt(k) && hexToInt(k) > hexToInt(peer.getPredecessor().id))
+        ) {
+            // current node is the most appropriate to store the given file
+            lookupResponse = new LookupResponse(Host.getHostname(), Host.getIpAddress(), this.peer.getIdentifier());
+            try {
+                Socket clientSocket = Client.sendMessage(message.getIpAddress(), Constants.StoreData.PORT, lookupResponse);
+                clientSocket.close();
+                return;
+            } catch (IOException e) {
+                log.error(e.getLocalizedMessage());
+            }
+        }
+
+        Identifier q = null;
+        // lookup(k)
+        // Current node p forwards query to node q with index j
+        // in p's FT where q = FT(p)[j] <= k <= FT(p)[j+1]
+        // or q = FT(p) when p < k < FT(p)[1]
+        FingerTable fingerTable = peer.getFingerTable();
+        List<Identifier> peerIds = fingerTable.getPeerIds();
+
+        if (hexToInt(p) < hexToInt(k) && hexToInt(k) < hexToInt(peerIds.get(0).id)) {
+            // p < k < FT(p)[1] satisfied
+            q = peerIds.get(0);
+        } else {
+            for (int j = 0, peerIdsSize = peerIds.size() - 1; j < peerIdsSize; j++) {
+                if (hexToInt(peerIds.get(j).id) <= hexToInt(k) && hexToInt(k) < hexToInt(peerIds.get(j + 1).id)) {
+                    // q = FT(p)[j] <= k < FT(p)[j+1] satisfied
+                    q = peerIds.get(j);
+                }
+            }
+        }
+
+        // forward lookup request to q
+        LookupRequest lookupRequest = new LookupRequest(Host.getHostname(), Host.getIpAddress(), k);
+        assert q != null;
+        try {
+            Socket peerSocket = Client.sendMessage(q.hostname, Constants.Peer.PORT, lookupRequest);
+            peerSocket.close();
+        } catch (IOException e) {
+            log.error("Error forwarding LookupRequest({}) to {}: {}", k, q.hostname, e.getLocalizedMessage());
+        }
     }
 
     /**

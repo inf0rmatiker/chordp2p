@@ -15,7 +15,7 @@ public class Constants {
     }
 
     public static class StoreData {
-        public static final int PORT = 9002;
+        public static final int PORT = 9001;
         public static final String DATA_DIR = "/tmp";
     }
 }

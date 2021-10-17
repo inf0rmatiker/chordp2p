@@ -322,4 +322,12 @@ public class Peer extends Node {
         }
         System.out.println(sb);
     }
+
+    public void printSuccessor() {
+        System.out.println(this.successor);
+    }
+
+    public void printPredecessor() {
+        System.out.println(this.predecessor);
+    }
 }

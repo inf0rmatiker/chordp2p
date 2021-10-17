@@ -98,6 +98,10 @@ public class InteractiveCommandParser extends Thread {
                 peer.printHost();
             } else if (nextCommand.equals("get-id")) {
                 peer.printId();
+            } else if (nextCommand.equals("get-successor") || nextCommand.equals("get-s")) {
+                peer.printSuccessor();
+            } else if (nextCommand.equals("get-predecessor") || nextCommand.equals("get-p")) {
+                peer.printPredecessor();
             } else if (nextCommand.equals("exit")) {
                 peer.leaveNetwork();
             } else if (nextCommand.equals("")) {

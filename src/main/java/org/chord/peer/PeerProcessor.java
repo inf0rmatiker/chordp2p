@@ -85,6 +85,8 @@ public class PeerProcessor extends Processor {
     private void processLookupRequest(LookupRequest message) {
         String k = message.fileId;
         String hostname = message.hostname;
+        String storeDataHost = message.storeDataHost;
+        String storeDataIpAddress = message.storeDataIpAddress;
         log.info("{} initiating lookup({})", hostname, k);
 
         String p = this.peer.getIdentifier().id;
@@ -98,7 +100,8 @@ public class PeerProcessor extends Processor {
             // current node is the most appropriate to store the given file
             lookupResponse = new LookupResponse(Host.getHostname(), Host.getIpAddress(), this.peer.getIdentifier());
             try {
-                Socket clientSocket = Client.sendMessage(message.getIpAddress(), Constants.StoreData.PORT, lookupResponse);
+                log.info("Peer {} sending LookupResponse to StoreData ({})", Host.getHostname(), storeDataHost);
+                Socket clientSocket = Client.sendMessage(storeDataIpAddress, Constants.StoreData.PORT, lookupResponse);
                 clientSocket.close();
                 return;
             } catch (IOException e) {
@@ -126,14 +129,15 @@ public class PeerProcessor extends Processor {
             }
         }
 
-        // forward lookup request to q
-        LookupRequest lookupRequest = new LookupRequest(Host.getHostname(), Host.getIpAddress(), k);
         assert q != null;
+        LookupRequest lookupRequest =
+                new LookupRequest(Host.getHostname(), Host.getIpAddress(), k, storeDataHost, storeDataIpAddress);
         try {
+            log.info("Forwarding LookupRequest({}) to {}", k, q.hostname);
             Socket peerSocket = Client.sendMessage(q.hostname, Constants.Peer.PORT, lookupRequest);
             peerSocket.close();
         } catch (IOException e) {
-            log.error("Error forwarding LookupRequest({}) to {}: {}", k, q.hostname, e.getLocalizedMessage());
+            log.error("Error forwarding LookupRequest: {}", e.getLocalizedMessage());
         }
     }
 

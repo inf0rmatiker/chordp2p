@@ -69,7 +69,9 @@ public class StoreData extends Node {
 
             // lookup(k) to find the most appropriate peer to store the file, wait for response
             Identifier randomPeerId = grpResponse.peerId;
-            LookupRequest lookupRequest = new LookupRequest(Host.getHostname(), Host.getIpAddress(), fileId);
+            LookupRequest lookupRequest = new LookupRequest(Host.getHostname(), Host.getIpAddress(), fileId,
+                    Host.getHostname(), Host.getIpAddress());
+
             log.info("Sending lookup({}) to peer {}", fileId, randomPeerId.toString());
             Socket randomPeerSocket = Client.sendMessage(randomPeerId.hostname, Constants.Peer.PORT, lookupRequest);
             DataInputStream disRandomPeer = new DataInputStream(randomPeerSocket.getInputStream());
@@ -79,10 +81,10 @@ public class StoreData extends Node {
             // contact the appropriate node and transfer file
             Identifier matchingPeerId = lookupResponse.peerId;
             log.info("Matching PeerId for FileId({}): {}", fileId, matchingPeerId);
+            System.out.println("TODO: implement file transfer");
         } catch (IOException e) {
             log.error(e.getLocalizedMessage());
         }
-
     }
 
     public void startServer() {

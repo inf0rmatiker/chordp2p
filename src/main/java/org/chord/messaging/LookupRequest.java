@@ -12,10 +12,18 @@ public class LookupRequest extends Message {
 
     public String fileId;
 
-    public LookupRequest(String hostname, String ipAddress, String fileId) {
+    // same as hostname when the request is initiated by StoreData
+    public String storeDataHost;
+
+    // same as ipAddress when the request is initiated by StoreAddress
+    public String storeDataIpAddress;
+
+    public LookupRequest(String hostname, String ipAddress, String fileId, String storeDataHost, String storeDataIpAddress) {
         this.hostname = hostname;
         this.ipAddress = ipAddress;
         this.fileId = fileId;
+        this.storeDataHost = storeDataHost;
+        this.storeDataIpAddress = storeDataIpAddress;
         try {
             marshal();
         } catch (IOException e) {
@@ -31,12 +39,16 @@ public class LookupRequest extends Message {
     public void marshal(DataOutputStream dataOutputStream) throws IOException {
         super.marshal(dataOutputStream);
         writeString(dataOutputStream, this.fileId);
+        writeString(dataOutputStream, this.storeDataHost);
+        writeString(dataOutputStream, this.storeDataIpAddress);
     }
 
     @Override
     public void unmarshal(DataInputStream dataInputStream) throws IOException {
         super.unmarshal(dataInputStream);
         this.fileId = readString(dataInputStream);
+        this.storeDataHost = readString(dataInputStream);
+        this.storeDataIpAddress = readString(dataInputStream);
     }
 
     @Override
@@ -45,13 +57,16 @@ public class LookupRequest extends Message {
         if (this == o) return true;
         if (!(o instanceof LookupRequest)) return false;
         LookupRequest lookupRequestOther = (LookupRequest) o;
-        return this.fileId.equals(lookupRequestOther.fileId);
+        return this.fileId.equals(lookupRequestOther.fileId) &&
+                this.storeDataHost.equals(lookupRequestOther.storeDataHost);
     }
 
     @Override
     public String toString() {
         return "\nLookupRequest:\n" +
-                String.format("\tfileId: %s\n", this.fileId);
+                String.format("\tfileId: %s\n", this.fileId) +
+                String.format("\tstoreDataHost: %s\n", this.storeDataHost) +
+                String.format("\tstoreDataIpAddress: %s\n", this.storeDataIpAddress);
     }
 
     @Override

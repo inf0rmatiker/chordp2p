@@ -90,7 +90,7 @@ public class PeerProcessor extends Processor {
     }
 
     /**
-     * Processes a LookupRequest Message by sending the most suitable peer for given fileId
+     * Processes a LookupRequest Message by finding the most suitable peer for given fileId k
      * @param message LookupRequest Message
      */
     private void processLookupRequest(LookupRequest message) {
@@ -103,22 +103,17 @@ public class PeerProcessor extends Processor {
         String p = this.peer.getIdentifier().id;
 
         LookupResponse lookupResponse;
-        if (p.equals(k)  // self == key
-                ||
-                // self > key > predecessor
-                (hexToInt(p) > hexToInt(k) && hexToInt(k) > hexToInt(peer.getPredecessor().id))
-
-        ) {
+        // self == key OR self > key > predecessor
+        if (p.equals(k) || (hexToInt(p) > hexToInt(k) && hexToInt(k) > peer.getPredecessor().value())) {
             if (p.equals(k)) {
                 log.debug("self == key");
             }
 
-            if ((hexToInt(p) > hexToInt(k) && hexToInt(k) > hexToInt(peer.getPredecessor().id))) {
+            if ((hexToInt(p) > hexToInt(k) && hexToInt(k) > peer.getPredecessor().value())) {
                 log.debug("self > key > predecessor");
             }
 
-            log.info("This Peer ({}) is the most suitable for storing file with id {}",
-                    Host.getHostname(), k);
+            log.info("This Peer ({}) is the target node for fileId={}", Host.getHostname(), k);
             lookupResponse = new LookupResponse(Host.getHostname(), Host.getIpAddress(), this.peer.getIdentifier());
             try {
                 log.info("Peer {} sending LookupResponse to StoreData ({})", Host.getHostname(), storeDataHost);
@@ -130,30 +125,27 @@ public class PeerProcessor extends Processor {
             }
         }
 
-        Identifier q = null;
         // lookup(k)
-        // Current node p forwards query to node q with index j
-        // in p's FT where q = FT(p)[j] <= k <= FT(p)[j+1]
-        // or q = FT(p) when p < k < FT(p)[1]
-        FingerTable fingerTable = peer.getFingerTable();
-        List<Identifier> peerIds = fingerTable.getPeerIds();
+        // Current node p forwards query to node q with index j in p's FT
+        // where q = FT(p)[j] <= k <= FT(p)[j+1]
+        // OR q = FT(p) when p < k < FT(p)[1]
+        Identifier q = null;
+        List<Identifier> peerIds = peer.getFingerTable().getPeerIds();
 
-        if (hexToInt(p) < hexToInt(k) && hexToInt(k) < hexToInt(peerIds.get(0).id)) {
+        if (hexToInt(p) < hexToInt(k) && hexToInt(k) < peerIds.get(0).value()) {
             log.debug("p < k < FT(p)[1] satisfied");
             q = peerIds.get(0);
         } else {
-            for (int j = 0, peerIdsSize = peerIds.size() - 1; j < peerIdsSize; j++) {
-                if (peerIds.get(j).value() <= hexToInt(k) &&
-                        hexToInt(k) < peerIds.get(j + 1).value()) {
+            for (int j = 0; j < peerIds.size() - 1; j++) {
+                if (peerIds.get(j).value() <= hexToInt(k) && hexToInt(k) < peerIds.get(j + 1).value()) {
                     log.debug("q = FT(p)[j] <= k < FT(p)[j+1] satisfied");
                     q = peerIds.get(j);
-                    break;
                 }
             }
         }
 
         if (q == null) {
-            log.warn("No matching PeerID found for k = {}", k);
+            log.warn("No matching PeerID found for k={}", k);
         } else {
             LookupRequest lookupRequest =
                     new LookupRequest(Host.getHostname(), Host.getIpAddress(), k, storeDataHost, storeDataIpAddress);

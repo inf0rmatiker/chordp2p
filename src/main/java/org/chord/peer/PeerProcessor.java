@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.chord.util.HashUtil.hexToInt;
@@ -73,7 +74,8 @@ public class PeerProcessor extends Processor {
                 case STORE_FILE_REQUEST:
                     processStoreFileRequest((StoreFileRequest) message);
                     break;
-                default: log.error("Unimplemented processing support for message type {}", message.getType());
+                default:
+                    log.error("Unimplemented processing support for message type {}", message.getType());
             }
         } catch (IOException e) {
             log.error("Encountered IOException when processing {}: {}", message.getType(), e.getMessage());
@@ -91,6 +93,7 @@ public class PeerProcessor extends Processor {
 
     /**
      * Processes a LookupRequest Message by finding the most suitable peer for given fileId k
+     *
      * @param message LookupRequest Message
      */
     private void processLookupRequest(LookupRequest message) {
@@ -136,11 +139,24 @@ public class PeerProcessor extends Processor {
             log.debug("p < k < FT(p)[1] satisfied");
             q = peerIds.get(0);
         } else {
+            ArrayList<Identifier> qList = new ArrayList<>();
             for (int j = 0; j < peerIds.size() - 1; j++) {
                 if (peerIds.get(j).value() <= hexToInt(k) && hexToInt(k) < peerIds.get(j + 1).value()) {
                     log.debug("q = FT(p)[j] <= k < FT(p)[j+1] satisfied");
                     q = peerIds.get(j);
+                    qList.add(q);
                 }
+            }
+
+            // find the maximum of qList
+            if (!qList.isEmpty()) {
+                Identifier qMax = qList.get(0);
+                for (Identifier currentQ : qList) {
+                    if (qMax.value() < currentQ.value()) {
+                        qMax = currentQ;
+                    }
+                }
+                q = qMax;
             }
         }
 
@@ -162,6 +178,7 @@ public class PeerProcessor extends Processor {
 
     /**
      * Processes a GetPredecessorRequest Message, by sending back our predecessor
+     *
      * @param message GetPredecessorRequest Message
      * @throws IOException If unable to read/write from/to the Socket, or marshal/unmarshal a Message
      */
@@ -178,6 +195,7 @@ public class PeerProcessor extends Processor {
 
     /**
      * Processes a GetSuccessorRequest Message, by sending back our successor
+     *
      * @param message GetSuccessorRequest Message
      * @throws IOException If unable to read/write from/to the Socket, or marshal/unmarshal a Message
      */
@@ -196,8 +214,9 @@ public class PeerProcessor extends Processor {
      * Processes a FindSuccessorRequest Message, containing an id, k, by:
      * - If we know the final successor of k (it's the first entry in our finger table), return that.
      * - If we don't know the successor of k, we forward the message to the first successor p in our
-     *      finger table such that p is the smallest value >= k. This is the nextBestSuccessor.
-     *      The response from the forward recipient is then sent back to the requester.
+     * finger table such that p is the smallest value >= k. This is the nextBestSuccessor.
+     * The response from the forward recipient is then sent back to the requester.
+     *
      * @param message FindSuccessorRequest Message containing k
      * @throws IOException If unable to read/write from streams/sockets
      */
@@ -243,7 +262,7 @@ public class PeerProcessor extends Processor {
                 );
                 sendResponse(this.socket, response);
 
-            } else  { // forward request to next best successor
+            } else { // forward request to next best successor
 
                 try {
                     log.info("Forwarding FindSuccessorRequest message from {} to {}: {}", message.getHostname(),

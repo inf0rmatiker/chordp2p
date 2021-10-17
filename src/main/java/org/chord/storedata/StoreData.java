@@ -5,6 +5,7 @@ import org.chord.messaging.GetRandomPeerResponse;
 import org.chord.messaging.LookupRequest;
 import org.chord.messaging.LookupResponse;
 import org.chord.messaging.MessageFactory;
+import org.chord.messaging.StoreFileRequest;
 import org.chord.networking.Client;
 import org.chord.networking.Node;
 import org.chord.peer.Identifier;
@@ -19,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.file.Paths;
 
 public class StoreData extends Node {
     private static final Logger log = LoggerFactory.getLogger(StoreData.class);
@@ -63,6 +65,9 @@ public class StoreData extends Node {
         String fileId = HashUtil.hashFile(fileBytes);
         log.info("Identifier for file '{}': {}", filePath, fileId);
 
+        // extract fileName of filePath
+        String fileName = Paths.get(filePath).getFileName().toString();
+
         // retrieve random peer information from discovery node
         GetRandomPeerRequest grpRequest = new GetRandomPeerRequest(Host.getHostname(), Host.getIpAddress());
         try {
@@ -79,11 +84,7 @@ public class StoreData extends Node {
 
             log.info("Sending lookup({}) to peer {}", fileId, randomPeerId.toString());
             Socket randomPeerSocket = Client.sendMessage(randomPeerId.hostname, Constants.Peer.PORT, lookupRequest);
-            /*
-            DataInputStream disRandomPeer = new DataInputStream(randomPeerSocket.getInputStream());
-            LookupResponse lookupResponse = (LookupResponse) MessageFactory.getInstance().createMessage(disRandomPeer);
-            randomPeerSocket.close(); // done talking to random peer
-             */
+            randomPeerSocket.close();
 
             // contact the appropriate node and transfer file
             while (suitablePeerForCurrentFile == null) {
@@ -94,9 +95,14 @@ public class StoreData extends Node {
                 }
             }
 
-            // suitablePeerForCurrentFile has been populated by StoreDataProcessor
+            // suitablePeerForCurrentFile has been populated by StoreDataProcessor.processLookupResponse()
             log.info("Matching PeerId for FileId({}): {}", fileId, suitablePeerForCurrentFile);
-            System.out.println("TODO: implement file transfer");
+            StoreFileRequest sfRequest = new StoreFileRequest(
+                    Host.getHostname(), Host.getIpAddress(), fileId, fileName, fileBytes);
+            Socket suitablePeerSocket = Client.sendMessage(
+                    suitablePeerForCurrentFile.hostname, Constants.Peer.PORT, sfRequest);
+            suitablePeerSocket.close();
+            suitablePeerForCurrentFile = null;
         } catch (IOException e) {
             log.error(e.getLocalizedMessage());
         }

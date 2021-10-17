@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Peer extends Node {
@@ -220,6 +221,7 @@ public class Peer extends Node {
      * @param bytes file content as byte array
      */
     public void storeFile(String fileId,  String fileName, byte[] bytes) throws IOException {
+        log.info("Writing {}(id={}, length={} bytes) to {}", fileName, fileId, bytes.length, Constants.Peer.DATA_DIR);
         FileUtil.writeToFile(Constants.Peer.DATA_DIR + File.separator + fileName, bytes);
         storedFiles.put(fileId, fileName);
     }
@@ -313,4 +315,12 @@ public class Peer extends Node {
                 String.format("\tsuccessor: %s\n", this.successor);
     }
 
+    public void printFiles() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("Files on %s:\n", Host.getHostname()));
+        for (Map.Entry<String, String> entry : storedFiles.entrySet()) {
+            sb.append(String.format("\t%s: %s\n", entry.getKey(), entry.getValue()));
+        }
+        System.out.println(sb);
+    }
 }

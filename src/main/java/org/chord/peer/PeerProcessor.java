@@ -111,7 +111,7 @@ public class PeerProcessor extends Processor {
 
         ) {
             if (p.equals(k)) {
-                log.debug("p == k");
+                log.debug("self == key");
             }
 
             if ((hexToInt(p) > hexToInt(k) && hexToInt(k) > hexToInt(peer.getPredecessor().id))) {
@@ -140,13 +140,12 @@ public class PeerProcessor extends Processor {
         List<Identifier> peerIds = fingerTable.getPeerIds();
 
         if (hexToInt(p) < hexToInt(k) && hexToInt(k) < hexToInt(peerIds.get(0).id)) {
-            // p < k < FT(p)[1] satisfied
             log.debug("p < k < FT(p)[1] satisfied");
             q = peerIds.get(0);
         } else {
             for (int j = 0, peerIdsSize = peerIds.size() - 1; j < peerIdsSize; j++) {
-                if (hexToInt(peerIds.get(j).id) <= hexToInt(k) && hexToInt(k) < hexToInt(peerIds.get(j + 1).id)) {
-                    // q = FT(p)[j] <= k < FT(p)[j+1] satisfied
+                if (peerIds.get(j).value() <= hexToInt(k) &&
+                        hexToInt(k) < peerIds.get(j + 1).value()) {
                     log.debug("q = FT(p)[j] <= k < FT(p)[j+1] satisfied");
                     q = peerIds.get(j);
                     break;
@@ -159,11 +158,9 @@ public class PeerProcessor extends Processor {
         } else {
             LookupRequest lookupRequest =
                     new LookupRequest(Host.getHostname(), Host.getIpAddress(), k, storeDataHost, storeDataIpAddress);
-            log.debug("storeDataHost: {}", storeDataHost);
-            log.debug("storeDataIpAddress: {}", storeDataIpAddress);
             log.debug("q: {}", q);
             try {
-                log.info("Forwarding LookupRequest({}) to {}", k, q.hostname);
+                log.info("Forwarding lookup({}) to {}", k, q.hostname);
                 Socket peerSocket = Client.sendMessage(q.hostname, Constants.Peer.PORT, lookupRequest);
                 peerSocket.close();
             } catch (IOException e) {

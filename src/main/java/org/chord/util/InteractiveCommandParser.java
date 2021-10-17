@@ -90,8 +90,10 @@ public class InteractiveCommandParser extends Thread {
         Peer peer = (Peer) node;
         while (acceptingCommands) {
             nextCommand = scanner.nextLine().trim();
-            if (nextCommand.equals("get-ft")) {
+            if (nextCommand.equals("get-ft") || nextCommand.equals("print-ft")) {
                 peer.printFingerTable();
+            } else if (nextCommand.equals("get-files") || nextCommand.equals("print-files")) {
+                peer.printFiles();
             } else if (nextCommand.equals("get-host")) {
                 peer.printHost();
             } else if (nextCommand.equals("get-id")) {

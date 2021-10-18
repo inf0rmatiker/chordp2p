@@ -219,55 +219,42 @@ public class PeerProcessor extends Processor {
 
         } else { // We don't know the final successor of k, so forward request to next best successor in finger table
 
-            Identifier nextBestSuccessor = ourFingerTable.successor(id);
-            log.info("The next best successor we know of {} is: {}", id, nextBestSuccessor);
+            Identifier bestPredecessor = ourFingerTable.bestPredecessorOf(id);
+            log.info("The best predecessor we know of {} is: {}", id, bestPredecessor);
 
-            if (nextBestSuccessor.equals(this.peer.getIdentifier())) {
+            try {
+                log.info("Forwarding FindSuccessorRequest message from {} to {}: {}", message.getHostname(),
+                        bestPredecessor.getHostname(), message);
 
-                log.info("Next best successor of {} is us; returning {} as final successor", id,
-                        this.peer.getIdentifier());
-                PeerIdentifierMessage response = new PeerIdentifierMessage(
-                        Host.getHostname(),
-                        Host.getIpAddress(),
-                        nextBestSuccessor
-                );
+                // Change message's hostname/ip address to ours and re-marshal
+                message.hostname = Host.getHostname();
+                message.ipAddress = Host.getIpAddress();
+                message.marshal();
+                if (this.socket.isClosed()) {
+                    log.error("Socket has been closed 0!!!");
+                }
+
+                // Open Socket to next best successor, request successor(k), get response, re-marshal it
+                Socket successorSocket = Client.sendMessage(bestPredecessor.getHostname(), Constants.Peer.PORT, message);
+                DataInputStream dataInputStream = new DataInputStream(successorSocket.getInputStream());
+                PeerIdentifierMessage response = (PeerIdentifierMessage) MessageFactory.getInstance().
+                        createMessage(dataInputStream);
+                response.marshal(); // important! received message is not automatically marshaled
+                dataInputStream.close();
+                successorSocket.close(); // done talking with next best successor peer
+
+                // Return response to original requester
+                log.info("Received final result of FindSuccessorRequest from {}: {}", response.getHostname(), response);
+                if (this.socket.isClosed()) {
+                    log.error("Socket has been closed 1!!!");
+                }
                 sendResponse(this.socket, response);
 
-            } else { // forward request to next best successor
-
-                try {
-                    log.info("Forwarding FindSuccessorRequest message from {} to {}: {}", message.getHostname(),
-                            nextBestSuccessor.getHostname(), message);
-
-                    // Change message's hostname/ip address to ours and re-marshal
-                    message.hostname = Host.getHostname();
-                    message.ipAddress = Host.getIpAddress();
-                    message.marshal();
-                    if (this.socket.isClosed()) {
-                        log.error("Socket has been closed 0!!!");
-                    }
-
-                    // Open Socket to next best successor, request successor(k), get response, re-marshal it
-                    Socket successorSocket = Client.sendMessage(nextBestSuccessor.getHostname(), Constants.Peer.PORT, message);
-                    DataInputStream dataInputStream = new DataInputStream(successorSocket.getInputStream());
-                    PeerIdentifierMessage response = (PeerIdentifierMessage) MessageFactory.getInstance().
-                            createMessage(dataInputStream);
-                    response.marshal(); // important! received message is not automatically marshaled
-                    dataInputStream.close();
-                    successorSocket.close(); // done talking with next best successor peer
-
-                    // Return response to original requester
-                    log.info("Received final result of FindSuccessorRequest from {}: {}", response.getHostname(), response);
-                    if (this.socket.isClosed()) {
-                        log.error("Socket has been closed 1!!!");
-                    }
-                    sendResponse(this.socket, response);
-
-                } catch (IOException e) {
-                    log.error("Failed to forward FindSuccessorRequest Message to {}: {}", nextBestSuccessor.getHostname(),
-                            e.getMessage());
-                }
+            } catch (IOException e) {
+                log.error("Failed to forward FindSuccessorRequest Message to {}: {}", bestPredecessor.getHostname(),
+                        e.getMessage());
             }
+
         }
     }
 

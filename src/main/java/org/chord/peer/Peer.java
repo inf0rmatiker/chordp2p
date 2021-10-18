@@ -335,12 +335,12 @@ public class Peer extends Node {
      * @param newPredecessorId
      */
     public void moveFilesToNewPredecessor(Identifier newPredecessorId) {
+        Socket predecessorSocket = null;
         for (Map.Entry<String, String> entry : storedFiles.entrySet()) {
             String fileId = entry.getKey();
             String fileName = entry.getValue();
             if (HashUtil.hexToInt(fileId) <= newPredecessorId.value()) {
                 log.info("File {}({}) should be moved to new predecessor {}", fileName, fileId, newPredecessorId);
-                Socket predecessorSocket = null;
                 try {
                     // read file from disk
                     byte[] fileBytes = FileUtil.readFileAsBytes(
@@ -358,18 +358,19 @@ public class Peer extends Node {
                             (MoveFileResponse) MessageFactory.getInstance().createMessage(dataInputStream);
                     log.info("File {}({}) successfully moved to {}",
                             mfResponse.fileName, mfResponse.fileId, mfResponse.hostname);
+                    // remove file from current peer
                     removeFile(fileId);
                 } catch (IOException e) {
                     log.error(e.getLocalizedMessage());
-                } finally {
-                    if (predecessorSocket != null) {
-                        try {
-                            predecessorSocket.close();
-                        } catch (IOException e) {
-                            log.error(e.getLocalizedMessage());
-                        }
-                    }
                 }
+            }
+        }
+
+        if (predecessorSocket != null) {
+            try {
+                predecessorSocket.close();
+            } catch (IOException e) {
+                log.error(e.getLocalizedMessage());
             }
         }
     }

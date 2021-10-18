@@ -218,7 +218,7 @@ public class Peer extends Node {
      * @param fileName
      * @param bytes file content as byte array
      */
-    public void storeFile(String fileId,  String fileName, byte[] bytes) throws IOException {
+    public synchronized void storeFile(String fileId,  String fileName, byte[] bytes) throws IOException {
         log.info("Writing {}(id={}, length={} bytes) to {}", fileName, fileId, bytes.length, Constants.Peer.DATA_DIR);
         FileUtil.writeToFile(Constants.Peer.DATA_DIR + File.separator + fileName, bytes);
         storedFiles.put(fileId, fileName);
@@ -228,7 +228,7 @@ public class Peer extends Node {
      * Removes specified file from Peer's local storage and updates tracking info
      * @param fileId 16-bit file digest
      */
-    public void removeFile(String fileId) {
+    public synchronized void removeFile(String fileId) {
         if (storedFiles.containsKey(fileId)) {
             String fileName = storedFiles.get(fileId);
             boolean success = FileUtil.deleteFile(Constants.Peer.DATA_DIR + File.separator + fileName);
@@ -335,7 +335,7 @@ public class Peer extends Node {
      * Look through stored files initiate MoveFileRequests
      * @param newPredecessorId
      */
-    public void moveFilesToNewPredecessor(Identifier newPredecessorId) {
+    public synchronized void moveFilesToNewPredecessor(Identifier newPredecessorId) {
         Socket predecessorSocket = null;
         for (Map.Entry<String, String> entry : storedFiles.entrySet()) {
             String fileId = entry.getKey();

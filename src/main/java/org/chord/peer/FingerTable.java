@@ -167,7 +167,7 @@ public class FingerTable {
                 int successor = peerId.value();
                 if (isSuccessorOf(successor, k)) {
                     log.debug("successor({}): found successor {} of k {}", id, successor, k);
-                    return peerId;
+                    return this.peerIds.get(i-1);
                 }
             }
         }

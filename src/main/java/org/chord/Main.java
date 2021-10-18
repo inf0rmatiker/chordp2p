@@ -65,7 +65,7 @@ public class Main {
 
     private static void startStoreData(String discoveryNodeHostname) {
         StoreData storeData = new StoreData(discoveryNodeHostname, Constants.DiscoveryNode.PORT);
-        storeData.startServer();
+        storeData.initialize();
     }
 
     private static void startPeer(String discoveryNodeHostname, String id) {

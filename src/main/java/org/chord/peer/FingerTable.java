@@ -159,8 +159,11 @@ public class FingerTable {
         if (k == p) {
             log.debug("successor({}): k == p, returning our own identifier", id);
             return this.identifier;
-        } else {
-            for (Identifier peerId : this.peerIds) {
+        } else if (isSuccessorOf(this.peerIds.get(0).value(), k)) { // p < k < FT[0]
+            return this.peerIds.get(0);
+        } else { // FT[j] <= k < FT[j+1]
+            for (int i = 1; i < this.peerIds.size(); i++) {
+                Identifier peerId = this.peerIds.get(i);
                 int successor = peerId.value();
                 if (isSuccessorOf(successor, k)) {
                     log.debug("successor({}): found successor {} of k {}", id, successor, k);

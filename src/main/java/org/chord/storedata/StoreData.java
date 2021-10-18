@@ -6,6 +6,7 @@ import org.chord.messaging.LookupRequest;
 import org.chord.messaging.LookupResponse;
 import org.chord.messaging.MessageFactory;
 import org.chord.messaging.StoreFileRequest;
+import org.chord.messaging.StoreFileResponse;
 import org.chord.networking.Client;
 import org.chord.networking.Node;
 import org.chord.peer.Identifier;
@@ -94,7 +95,11 @@ public class StoreData extends Node {
                     Host.getHostname(), Host.getIpAddress(), fileId, fileName, fileBytes);
             Socket suitablePeerSocket = Client.sendMessage(
                     matchingPeerId.hostname, Constants.Peer.PORT, sfRequest);
+            StoreFileResponse sfResponse = (StoreFileResponse) MessageFactory.getInstance()
+                    .createMessage(new DataInputStream(suitablePeerSocket.getInputStream()));
             suitablePeerSocket.close();
+            log.info("File '{}'({}) successfully stored on Peer {}",
+                    sfResponse.fileName, sfResponse.fileId, sfResponse.hostname);
         } catch (IOException e) {
             log.error(e.getLocalizedMessage());
         }

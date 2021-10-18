@@ -12,6 +12,7 @@ import org.chord.messaging.PeerIdentifierMessage;
 import org.chord.messaging.PredecessorNotification;
 import org.chord.messaging.StatusMessage;
 import org.chord.messaging.StoreFileRequest;
+import org.chord.messaging.StoreFileResponse;
 import org.chord.messaging.SuccessorNotification;
 import org.chord.networking.Client;
 import org.chord.networking.Processor;
@@ -23,10 +24,6 @@ import org.slf4j.LoggerFactory;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.chord.util.HashUtil.hexToInt;
 
 public class PeerProcessor extends Processor {
 
@@ -86,6 +83,13 @@ public class PeerProcessor extends Processor {
     private void processStoreFileRequest(StoreFileRequest message) {
         try {
             this.peer.storeFile(message.fileId, message.fileName, message.bytes);
+            StoreFileResponse storeFileResponse = new StoreFileResponse(
+                    Host.getHostname(),
+                    Host.getIpAddress(),
+                    message.fileId,
+                    message.fileName
+            );
+            sendResponse(this.socket, storeFileResponse);
         } catch (IOException e) {
             log.error(e.getLocalizedMessage());
         }

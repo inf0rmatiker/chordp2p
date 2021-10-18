@@ -312,6 +312,7 @@ public class PeerProcessor extends Processor {
             log.info("Updating finger table with peer: {}", message.getPeerId());
             this.peer.updateFingerTable(message.getPeerId());
             log.debug("Forwarding NetworkJoinNotification Message to {}: {}", this.peer.getSuccessor(), message);
+            message.marshal();
             Client.sendMessage(this.peer.getSuccessor().getHostname(), Constants.Peer.PORT, message).close();
         }
     }

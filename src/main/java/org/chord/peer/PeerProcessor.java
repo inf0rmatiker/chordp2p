@@ -7,6 +7,8 @@ import org.chord.messaging.LookupRequest;
 import org.chord.messaging.LookupResponse;
 import org.chord.messaging.Message;
 import org.chord.messaging.MessageFactory;
+import org.chord.messaging.MoveFileRequest;
+import org.chord.messaging.MoveFileResponse;
 import org.chord.messaging.NetworkJoinNotification;
 import org.chord.messaging.PeerIdentifierMessage;
 import org.chord.messaging.PredecessorNotification;
@@ -71,6 +73,9 @@ public class PeerProcessor extends Processor {
                 case STORE_FILE_REQUEST:
                     processStoreFileRequest((StoreFileRequest) message);
                     break;
+                case MOVE_FILE_REQUEST:
+                    processMoveFileRequest((MoveFileRequest) message);
+                    break;
                 default:
                     log.error("Unimplemented processing support for message type {}", message.getType());
             }
@@ -78,6 +83,21 @@ public class PeerProcessor extends Processor {
             log.error("Encountered IOException when processing {}: {}", message.getType(), e.getMessage());
         }
 
+    }
+
+    private void processMoveFileRequest(MoveFileRequest message) {
+        try {
+            peer.storeFile(message.fileId, message.fileName, message.fileBytes);
+            MoveFileResponse mfResponse = new MoveFileResponse(
+                    Host.getHostname(),
+                    Host.getIpAddress(),
+                    message.fileId,
+                    message.fileName
+            );
+            sendResponse(this.socket, mfResponse);
+        } catch (IOException e) {
+            log.error("Unable to store file {}({}): {}", message.fileName, message.fileId, e.getLocalizedMessage());
+        }
     }
 
     private void processStoreFileRequest(StoreFileRequest message) {
@@ -134,8 +154,6 @@ public class PeerProcessor extends Processor {
                     matchingPeer
             );
             sendResponse(this.socket, lookupResponse);
-//            Socket storeDataSocket = Client.sendMessage(storeDataHost, Constants.StoreData.PORT, lookupResponse);
-//            storeDataSocket.close();
         } catch (IOException e) {
             log.error(e.getLocalizedMessage());
         }
@@ -274,6 +292,8 @@ public class PeerProcessor extends Processor {
                 Host.getIpAddress(),
                 Message.Status.OK
         ));
+
+        peer.moveFilesToNewPredecessor(peer.getPredecessor());
     }
 
     public void processSuccessorNotification(SuccessorNotification message) throws IOException {
@@ -297,5 +317,4 @@ public class PeerProcessor extends Processor {
             }
         }
     }
-
 }

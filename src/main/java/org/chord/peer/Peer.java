@@ -3,6 +3,8 @@ package org.chord.peer;
 import org.chord.messaging.FindSuccessorRequest;
 import org.chord.messaging.GetPredecessorRequest;
 import org.chord.messaging.MessageFactory;
+import org.chord.messaging.MoveFileRequest;
+import org.chord.messaging.MoveFileResponse;
 import org.chord.messaging.NetworkExitNotification;
 import org.chord.messaging.NetworkJoinNotification;
 import org.chord.messaging.PeerIdentifierMessage;
@@ -55,10 +57,6 @@ public class Peer extends Node {
 
     public String getHostname() {
         return discoveryNodeHostname;
-    }
-
-    public int getDiscoveryNodePort() {
-        return discoveryNodePort;
     }
 
     public FingerTable getFingerTable() {
@@ -329,5 +327,50 @@ public class Peer extends Node {
 
     public void printPredecessor() {
         System.out.println(this.predecessor);
+    }
+
+    /**
+     * Moves matching files to new predecessor
+     * Look through stored files initiate MoveFileRequests
+     * @param newPredecessorId
+     */
+    public void moveFilesToNewPredecessor(Identifier newPredecessorId) {
+        for (Map.Entry<String, String> entry : storedFiles.entrySet()) {
+            String fileId = entry.getKey();
+            String fileName = entry.getValue();
+            if (HashUtil.hexToInt(fileId) <= newPredecessorId.value()) {
+                log.info("File {}({}) should be moved to new predecessor {}", fileName, fileId, newPredecessorId);
+                Socket predecessorSocket = null;
+                try {
+                    // read file from disk
+                    byte[] fileBytes = FileUtil.readFileAsBytes(
+                            Constants.Peer.DATA_DIR + File.separator + fileName);
+                    MoveFileRequest mfRequest = new MoveFileRequest(
+                            Host.getHostname(),
+                            Host.getIpAddress(),
+                            fileId,
+                            fileName,
+                            fileBytes
+                    );
+                    predecessorSocket = Client.sendMessage(newPredecessorId.hostname, Constants.Peer.PORT, mfRequest);
+                    DataInputStream dataInputStream = new DataInputStream(predecessorSocket.getInputStream());
+                    MoveFileResponse mfResponse =
+                            (MoveFileResponse) MessageFactory.getInstance().createMessage(dataInputStream);
+                    log.info("File {}({}) successfully moved to {}",
+                            mfResponse.fileName, mfResponse.fileId, mfResponse.hostname);
+                    removeFile(fileId);
+                } catch (IOException e) {
+                    log.error(e.getLocalizedMessage());
+                } finally {
+                    if (predecessorSocket != null) {
+                        try {
+                            predecessorSocket.close();
+                        } catch (IOException e) {
+                            log.error(e.getLocalizedMessage());
+                        }
+                    }
+                }
+            }
+        }
     }
 }

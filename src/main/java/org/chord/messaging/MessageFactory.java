@@ -65,6 +65,7 @@ public class MessageFactory {
                 case STORE_FILE_REQUEST: return new StoreFileRequest(dataInputStream);
                 case STORE_FILE_RESPONSE: return new StoreFileResponse(dataInputStream);
                 case MOVE_FILE_REQUEST: return new MoveFileRequest(dataInputStream);
+                case MOVE_FILE_RESPONSE: return new MoveFileResponse(dataInputStream);
                 default: return null;
             }
         } else {

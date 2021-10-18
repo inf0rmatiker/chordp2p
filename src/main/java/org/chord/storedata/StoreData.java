@@ -1,12 +1,6 @@
 package org.chord.storedata;
 
-import org.chord.messaging.GetRandomPeerRequest;
-import org.chord.messaging.GetRandomPeerResponse;
-import org.chord.messaging.LookupRequest;
-import org.chord.messaging.LookupResponse;
-import org.chord.messaging.MessageFactory;
-import org.chord.messaging.StoreFileRequest;
-import org.chord.messaging.StoreFileResponse;
+import org.chord.messaging.*;
 import org.chord.networking.Client;
 import org.chord.networking.Node;
 import org.chord.peer.Identifier;
@@ -61,45 +55,52 @@ public class StoreData extends Node {
             return;
         }
 
-        // calculate 16-bit hash 'k'
+        // Calculate 16-bit hash 'k'
         String fileId = HashUtil.hashFile(fileBytes);
         log.info("Identifier for file '{}': {}", filePath, fileId);
 
-        // extract fileName of filePath
+        // Extract fileName of filePath
         String fileName = Paths.get(filePath).getFileName().toString();
 
-        // retrieve random peer information from discovery node
+        // Retrieve random peer information from discovery node
         GetRandomPeerRequest grpRequest = new GetRandomPeerRequest(Host.getHostname(), Host.getIpAddress());
         try {
             Socket clientSocket = Client.sendMessage(this.discoveryNodeHostname, this.discoveryNodePort, grpRequest);
             // send getRandomPeerRequest, wait for response
-            DataInputStream disDiscovery = new DataInputStream(clientSocket.getInputStream());
-            GetRandomPeerResponse grpResponse = (GetRandomPeerResponse) MessageFactory.getInstance().createMessage(disDiscovery);
+            DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream());
+            GetRandomPeerResponse grpResponse = (GetRandomPeerResponse) MessageFactory.getInstance().createMessage(dataInputStream);
+            dataInputStream.close();
             clientSocket.close(); // done talking to discovery node
 
-            // lookup(k) to find the most appropriate peer to store the file, wait for response
-            Identifier randomPeerId = grpResponse.peerId;
-            LookupRequest lookupRequest = new LookupRequest(Host.getHostname(), Host.getIpAddress(), fileId,
-                    Host.getHostname(), Host.getIpAddress());
+            // Lookup(k) to find the most appropriate peer to store the file, wait for response
+            Identifier randomPeerId = grpResponse.getPeerId();
+            FindSuccessorRequest fsRequest = new FindSuccessorRequest(
+                    Host.getHostname(),
+                    Host.getIpAddress(),
+                    fileId
+            );
 
-            log.info("Sending lookup({}) to peer {}", fileId, randomPeerId.toString());
-            Socket randomPeerSocket = Client.sendMessage(randomPeerId.hostname, Constants.Peer.PORT, lookupRequest);
-            DataInputStream dataInputStream = new DataInputStream(randomPeerSocket.getInputStream());
-            LookupResponse lookupResponse = (LookupResponse) MessageFactory.getInstance().createMessage(dataInputStream);
-            randomPeerSocket.close();
+            log.info("Sending FindSuccessorRequest for file id {} to peer {}: {}",  fileId, grpResponse.getPeerId(), fsRequest);
+            clientSocket = Client.sendMessage(randomPeerId.getHostname(), Constants.Peer.PORT, fsRequest);
+            dataInputStream = new DataInputStream(clientSocket.getInputStream());
+            PeerIdentifierMessage pimResponse = (PeerIdentifierMessage) MessageFactory.getInstance().createMessage(dataInputStream);
+            dataInputStream.close();
+            clientSocket.close();
 
-            Identifier matchingPeerId = lookupResponse.peerId;
+            Identifier successor = pimResponse.getPeerId();
 
-            log.info("Matching PeerId for FileId({}): {}", fileId, matchingPeerId);
+            log.info("Successor of file id {}: {}", fileId, successor);
             StoreFileRequest sfRequest = new StoreFileRequest(
                     Host.getHostname(), Host.getIpAddress(), fileId, fileName, fileBytes);
-            Socket suitablePeerSocket = Client.sendMessage(
-                    matchingPeerId.hostname, Constants.Peer.PORT, sfRequest);
-            StoreFileResponse sfResponse = (StoreFileResponse) MessageFactory.getInstance()
-                    .createMessage(new DataInputStream(suitablePeerSocket.getInputStream()));
-            suitablePeerSocket.close();
-            log.info("File '{}'({}) successfully stored on Peer {}",
+            clientSocket = Client.sendMessage(successor.getHostname(), Constants.Peer.PORT, sfRequest);
+            dataInputStream = new DataInputStream(clientSocket.getInputStream());
+            StoreFileResponse sfResponse = (StoreFileResponse) MessageFactory.getInstance().createMessage(dataInputStream);
+            dataInputStream.close();
+            clientSocket.close();
+
+            log.info("File '{}' with id {} successfully stored on Peer {}",
                     sfResponse.fileName, sfResponse.fileId, sfResponse.hostname);
+
         } catch (IOException e) {
             log.error(e.getLocalizedMessage());
         }

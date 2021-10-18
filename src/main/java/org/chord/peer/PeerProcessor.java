@@ -130,8 +130,7 @@ public class PeerProcessor extends Processor {
         FindSuccessorRequest successorRequest = new FindSuccessorRequest(
                 Host.getHostname(),
                 Host.getIpAddress(),
-                k,
-                this.peer.getIdentifier()
+                k
         );
 
         // send successorRequest to the successor of current peer
@@ -227,17 +226,6 @@ public class PeerProcessor extends Processor {
 
                 log.info("Next best successor of {} is us; returning {} as final successor", id,
                         this.peer.getIdentifier());
-                PeerIdentifierMessage response = new PeerIdentifierMessage(
-                        Host.getHostname(),
-                        Host.getIpAddress(),
-                        nextBestSuccessor
-                );
-                sendResponse(this.socket, response);
-
-            } else if (nextBestSuccessor.equals(message.getRequesterId())) {
-
-                log.info("Next best successor of {} is the requester; returning {} as final successor", id,
-                        message.getRequesterId());
                 PeerIdentifierMessage response = new PeerIdentifierMessage(
                         Host.getHostname(),
                         Host.getIpAddress(),

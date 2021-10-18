@@ -130,8 +130,7 @@ public class Peer extends Node {
                 FindSuccessorRequest successorRequest = new FindSuccessorRequest(
                         Host.getHostname(),
                         Host.getIpAddress(),
-                        this.identifier.getId(),
-                        this.identifier
+                        this.identifier.getId()
                 );
                 Socket peerSocket = Client.sendMessage(randomPeerHost, Constants.Peer.PORT, successorRequest);
                 dataInputStream = new DataInputStream(peerSocket.getInputStream());
@@ -257,8 +256,7 @@ public class Peer extends Node {
                 FindSuccessorRequest request = new FindSuccessorRequest(
                         Host.getHostname(),
                         Host.getIpAddress(),
-                        id,
-                        this.identifier
+                        id
                 );
 
                 try {

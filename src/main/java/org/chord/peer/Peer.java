@@ -182,10 +182,11 @@ public class Peer extends Node {
 
                 updateFingerTable(); // updates our finger table with true successors of the finger table's indices
 
-                // Notify discovery server of successful network join
+
                 Client.sendMessage(this.successor.getHostname(), Constants.Peer.PORT, notification).close();
             }
 
+            // Notify discovery server of successful network join
             log.info("Notifying discovery server {} that we have fully joined the network", this.discoveryNodeHostname);
             Client.sendMessage(this.discoveryNodeHostname, this.discoveryNodePort, notification).close();
 

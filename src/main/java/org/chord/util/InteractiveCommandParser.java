@@ -40,15 +40,15 @@ public class InteractiveCommandParser extends Thread {
         log.info("Starting Command Parser...");
         switch (mode) {
             case Discovery:
-                System.out.println("Enter commands for DiscoveryNode:");
+                System.out.println("Enter commands for DiscoveryNode: (Type 'help' for usage)");
                 parseDiscoveryNodeCommands();
                 break;
             case Peer:
-                System.out.println("Enter commands for Peer:");
+                System.out.println("Enter commands for Peer: (Type 'help' for usage)");
                 parsePeerCommands();
                 break;
             case StoreData:
-                System.out.println("Enter commands for StoreData:");
+                System.out.println("Enter commands for StoreData: (Type 'help' for usage)");
                 parseStoreDataCommands();
                 break;
             default:
@@ -77,6 +77,8 @@ public class InteractiveCommandParser extends Thread {
                 storeData.printHost();
             } else if (nextCommand.equals("")) {
                 continue;
+            } else if (nextCommand.equals("help")) {
+                printStoreDataUsage();
             } else {
                 System.out.printf("Invalid command '%s'\n", nextCommand);
             }
@@ -85,14 +87,22 @@ public class InteractiveCommandParser extends Thread {
         scanner.close();
     }
 
+    private void printStoreDataUsage() {
+        String help = "Peer Usage:\n" +
+                "\tget-host                : Print hostname\n" +
+                "\tadd-file <filename>     : Add new file\n" +
+                "\t\n";
+        System.out.println(help);
+    }
+
     private void parsePeerCommands() {
         String nextCommand;
         Peer peer = (Peer) node;
         while (acceptingCommands) {
             nextCommand = scanner.nextLine().trim();
-            if (nextCommand.equals("get-ft") || nextCommand.equals("print-ft")) {
+            if (nextCommand.equals("get-ft")) {
                 peer.printFingerTable();
-            } else if (nextCommand.equals("get-files") || nextCommand.equals("print-files")) {
+            } else if (nextCommand.equals("get-files")) {
                 peer.printFiles();
             } else if (nextCommand.equals("get-host")) {
                 peer.printHost();
@@ -106,6 +116,8 @@ public class InteractiveCommandParser extends Thread {
                 peer.leaveNetwork();
             } else if (nextCommand.equals("")) {
                 continue;
+            } else if (nextCommand.equals("help")) {
+                printPeerUsage();
             } else {
                 System.out.printf("Invalid command '%s'\n", nextCommand);
             }
@@ -113,6 +125,21 @@ public class InteractiveCommandParser extends Thread {
         log.info("Shutting down peer");
         scanner.close();
     }
+
+    private void printPeerUsage() {
+        String help = "Peer Usage:\n" +
+                "\tget-host                : Print hostname\n" +
+                "\tget-id                  : Print this Peer's ID\n" +
+                "\tget-ft                  : Print Finger Table\n" +
+                "\tget-predecessor | get-p : Print Predecessor\n" +
+                "\tget-successor | get-s   : Print Successor\n" +
+                "\tget-files               : Print files stored on this Peer\n" +
+                "\texit                    : Leave network\n" +
+                "\t\n";
+        System.out.println(help);
+    }
+
+
 
     private void parseDiscoveryNodeCommands() {
         String nextCommand;
@@ -123,11 +150,19 @@ public class InteractiveCommandParser extends Thread {
                 discoveryNode.printHost();
             } else if (nextCommand.equals("")) {
                 continue;
+            } else if (nextCommand.equals("help")) {
+                printDiscoveryUsage();
             } else {
                 System.out.printf("Invalid command '%s'\n", nextCommand);
             }
         }
         log.info("Shutting down DiscoveryNode");
         scanner.close();
+    }
+
+    private void printDiscoveryUsage() {
+        String help = "Discovery Usage:\n" +
+                "\tget-host                : Print hostname\n";
+        System.out.println(help);
     }
 }

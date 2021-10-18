@@ -1,3 +1,11 @@
+## Testing Adding Peers
+- make peer DISCOVERY=arkansas ID=83d8
+- make peer DISCOVERY=arkansas ID=f5c5
+- make peer DISCOVERY=arkansas ID=1e4a
+- make peer DISCOVERY=arkansas ID=fffe
+- make peer DISCOVERY=arkansas ID=1539
+
+
 ## Testing `StoreData`
 
 ### Files
@@ -18,6 +26,7 @@
 
 ### Adding a file from `StoreData`
 - `add-file <file-name>`
+- Example: `add-file test-data/img1.jpg`
 
 ### Setting up Peers
 

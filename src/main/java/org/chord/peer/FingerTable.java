@@ -110,10 +110,10 @@ public class FingerTable {
      */
     public boolean knowsFinalSuccessorOf(String id) {
         int k = Identifier.valueOf(id);
-        int us = identifier.value();
+        int us = this.identifier.value();
         if (us == k) return true;
 
-        int firstSuccessor = peerIds.get(0).value();
+        int firstSuccessor = this.peerIds.get(0).value();
         return (isSuccessorOf(firstSuccessor, k));
     }
 
@@ -158,9 +158,9 @@ public class FingerTable {
         // If it's the same position as p, return our identifier
         if (k == p) {
             log.debug("successor({}): k == p, returning our own identifier", id);
-            return identifier;
+            return this.identifier;
         } else {
-            for (Identifier peerId : peerIds) {
+            for (Identifier peerId : this.peerIds) {
                 int successor = peerId.value();
                 if (isSuccessorOf(successor, k)) {
                     log.debug("successor({}): found successor {} of k {}", id, successor, k);
@@ -170,8 +170,8 @@ public class FingerTable {
         }
 
         log.debug("successor({}): did not find successor of k {}, returning last successor in finger table: {}",
-                id, k, peerIds.get(peerIds.size()-1));
-        return peerIds.get(peerIds.size()-1); // we didn't reach k, so return the closest point we can get to it
+                id, k, this.peerIds.get(this.peerIds.size()-1));
+        return this.peerIds.get(this.peerIds.size()-1); // we didn't reach k, so return the closest point we can get to it
     }
 
     /**

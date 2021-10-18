@@ -1,17 +1,23 @@
-## Testing StoreData
+## Testing `StoreData`
 
 ### Files
-#### File `build.gradle`
-- ID: 83d6
-- Command: `add-file build.gradle`
+- FileDir: `./test-data`
 
-#### File `gradlew.bat`
-- ID: f5c3
-- Command: `add-file gradlew.bat`
+| FileName  | Digest |
+|-----------|--------|
+| img1.jpg  | 1714   |
+| img2.jpg  | 608c   |
+| img3.jpg  | 6c8e   |
+| img4.jpg  | ec5d   |
+| img5.jpg  | 9783   |
+| img6.jpg  | 8640   |
+| img7.jpg  | d687   |
+| img8.jpg  | 505c   |
+| img9.jpg  | 34dd   |
+| img10.jpg | d0d1   |
 
-#### File `add-file CS555-Fall2021-HW2.pdf`
-- ID: 1e3a
-- Command: `add-file add-file CS555-Fall2021-HW2.pdf`
+### Adding a file from `StoreData`
+- `add-file <file-name>`
 
 ### Setting up Peers
 

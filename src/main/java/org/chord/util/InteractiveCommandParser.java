@@ -40,15 +40,15 @@ public class InteractiveCommandParser extends Thread {
         log.info("Starting Command Parser...");
         switch (mode) {
             case Discovery:
-                System.out.println("Enter commands for DiscoveryNode:");
+                System.out.println("Enter commands for DiscoveryNode: (Type 'help' for usage)");
                 parseDiscoveryNodeCommands();
                 break;
             case Peer:
-                System.out.println("Enter commands for Peer:");
+                System.out.println("Enter commands for Peer: (Type 'help' for usage)");
                 parsePeerCommands();
                 break;
             case StoreData:
-                System.out.println("Enter commands for StoreData:");
+                System.out.println("Enter commands for StoreData: (Type 'help' for usage)");
                 parseStoreDataCommands();
                 break;
             default:
@@ -63,7 +63,7 @@ public class InteractiveCommandParser extends Thread {
         StoreData storeData = (StoreData) node;
         while (acceptingCommands) {
             nextCommand = scanner.nextLine().trim();
-            if (nextCommand.equals("add-file")) {
+            if (nextCommand.contains("add-file")) {
                 // example: add-file test.txt
                 String[] args = nextCommand.split("\\s+");
                 if (args.length == 2) {
@@ -77,12 +77,22 @@ public class InteractiveCommandParser extends Thread {
                 storeData.printHost();
             } else if (nextCommand.equals("")) {
                 continue;
+            } else if (nextCommand.equals("help")) {
+                printStoreDataUsage();
             } else {
                 System.out.printf("Invalid command '%s'\n", nextCommand);
             }
         }
         log.info("Shutting down StoreData");
         scanner.close();
+    }
+
+    private void printStoreDataUsage() {
+        String help = "Peer Usage:\n" +
+                "\tget-host                : Print hostname\n" +
+                "\tadd-file <filename>     : Add new file\n" +
+                "\t\n";
+        System.out.println(help);
     }
 
     private void parsePeerCommands() {
@@ -92,14 +102,22 @@ public class InteractiveCommandParser extends Thread {
             nextCommand = scanner.nextLine().trim();
             if (nextCommand.equals("get-ft")) {
                 peer.printFingerTable();
+            } else if (nextCommand.equals("get-files")) {
+                peer.printFiles();
             } else if (nextCommand.equals("get-host")) {
                 peer.printHost();
             } else if (nextCommand.equals("get-id")) {
                 peer.printId();
+            } else if (nextCommand.equals("get-successor") || nextCommand.equals("get-s")) {
+                peer.printSuccessor();
+            } else if (nextCommand.equals("get-predecessor") || nextCommand.equals("get-p")) {
+                peer.printPredecessor();
             } else if (nextCommand.equals("exit")) {
                 peer.leaveNetwork();
             } else if (nextCommand.equals("")) {
                 continue;
+            } else if (nextCommand.equals("help")) {
+                printPeerUsage();
             } else {
                 System.out.printf("Invalid command '%s'\n", nextCommand);
             }
@@ -107,6 +125,21 @@ public class InteractiveCommandParser extends Thread {
         log.info("Shutting down peer");
         scanner.close();
     }
+
+    private void printPeerUsage() {
+        String help = "Peer Usage:\n" +
+                "\tget-host                : Print hostname\n" +
+                "\tget-id                  : Print this Peer's ID\n" +
+                "\tget-ft                  : Print Finger Table\n" +
+                "\tget-predecessor | get-p : Print Predecessor\n" +
+                "\tget-successor | get-s   : Print Successor\n" +
+                "\tget-files               : Print files stored on this Peer\n" +
+                "\texit                    : Leave network\n" +
+                "\t\n";
+        System.out.println(help);
+    }
+
+
 
     private void parseDiscoveryNodeCommands() {
         String nextCommand;
@@ -117,11 +150,19 @@ public class InteractiveCommandParser extends Thread {
                 discoveryNode.printHost();
             } else if (nextCommand.equals("")) {
                 continue;
+            } else if (nextCommand.equals("help")) {
+                printDiscoveryUsage();
             } else {
                 System.out.printf("Invalid command '%s'\n", nextCommand);
             }
         }
         log.info("Shutting down DiscoveryNode");
         scanner.close();
+    }
+
+    private void printDiscoveryUsage() {
+        String help = "Discovery Usage:\n" +
+                "\tget-host                : Print hostname\n";
+        System.out.println(help);
     }
 }

@@ -1,9 +1,21 @@
 package org.chord.peer;
 
-import org.chord.messaging.*;
+import org.chord.messaging.FindSuccessorRequest;
+import org.chord.messaging.GetPredecessorRequest;
+import org.chord.messaging.MessageFactory;
+import org.chord.messaging.MoveFileRequest;
+import org.chord.messaging.MoveFileResponse;
+import org.chord.messaging.NetworkExitNotification;
+import org.chord.messaging.NetworkJoinNotification;
+import org.chord.messaging.PeerIdentifierMessage;
+import org.chord.messaging.PredecessorNotification;
+import org.chord.messaging.RegisterPeerRequest;
+import org.chord.messaging.RegisterPeerResponse;
+import org.chord.messaging.SuccessorNotification;
 import org.chord.networking.Client;
 import org.chord.networking.Node;
 import org.chord.util.Constants;
+import org.chord.util.FileUtil;
 import org.chord.util.HashUtil;
 import org.chord.util.Host;
 import org.chord.util.InteractiveCommandParser;
@@ -11,9 +23,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.DataInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Peer extends Node {
     private static final Logger log = LoggerFactory.getLogger(Peer.class);
@@ -26,6 +41,9 @@ public class Peer extends Node {
     private Identifier predecessor;
     private Identifier successor;
 
+    // fileId (16-bit digest), fileName
+    private HashMap<String, String> storedFiles;
+
     private InteractiveCommandParser commandParser;
 
     public Peer(String discoveryNodeHostname, int discoveryNodePort, Identifier identifier) {
@@ -33,15 +51,12 @@ public class Peer extends Node {
         this.discoveryNodePort = discoveryNodePort;
         this.identifier = this.predecessor = this.successor = identifier; // init all known peers to our id
         this.fingerTable = new FingerTable(Constants.FINGER_TABLE_SIZE, identifier);
+        storedFiles = new HashMap<>();
         commandParser = new InteractiveCommandParser(this);
     }
 
     public String getHostname() {
         return discoveryNodeHostname;
-    }
-
-    public int getDiscoveryNodePort() {
-        return discoveryNodePort;
     }
 
     public FingerTable getFingerTable() {
@@ -115,8 +130,7 @@ public class Peer extends Node {
                 FindSuccessorRequest successorRequest = new FindSuccessorRequest(
                         Host.getHostname(),
                         Host.getIpAddress(),
-                        this.identifier.getId(),
-                        this.identifier
+                        this.identifier.getId()
                 );
                 Socket peerSocket = Client.sendMessage(randomPeerHost, Constants.Peer.PORT, successorRequest);
                 dataInputStream = new DataInputStream(peerSocket.getInputStream());
@@ -167,10 +181,11 @@ public class Peer extends Node {
 
                 updateFingerTable(); // updates our finger table with true successors of the finger table's indices
 
-                // Notify discovery server of successful network join
+
                 Client.sendMessage(this.successor.getHostname(), Constants.Peer.PORT, notification).close();
             }
 
+            // Notify discovery server of successful network join
             log.info("Notifying discovery server {} that we have fully joined the network", this.discoveryNodeHostname);
             Client.sendMessage(this.discoveryNodeHostname, this.discoveryNodePort, notification).close();
 
@@ -196,6 +211,35 @@ public class Peer extends Node {
         }
     }
 
+    /**
+     * Stores a new file in Peer's local storage and updates tracking info
+     * @param fileId 16-bit digest file digest
+     * @param fileName
+     * @param bytes file content as byte array
+     */
+    public synchronized void storeFile(String fileId,  String fileName, byte[] bytes) throws IOException {
+        log.info("Writing {}(id={}, length={} bytes) to {}", fileName, fileId, bytes.length, Constants.Peer.DATA_DIR);
+        FileUtil.writeToFile(Constants.Peer.DATA_DIR + File.separator + fileName, bytes);
+        storedFiles.put(fileId, fileName);
+    }
+
+    /**
+     * Removes specified file from Peer's local storage and updates tracking info
+     * @param fileId 16-bit file digest
+     */
+    public synchronized void removeFile(String fileId) {
+        if (storedFiles.containsKey(fileId)) {
+            String fileName = storedFiles.get(fileId);
+            boolean success = FileUtil.deleteFile(Constants.Peer.DATA_DIR + File.separator + fileName);
+            if (success) {
+                storedFiles.remove(fileId);
+                log.info("Removed file {} from {}", fileName, Host.getHostname());
+            } else {
+                log.warn("Unable to remove {}", fileName);
+            }
+        }
+    }
+
     public synchronized void updateFingerTable(Identifier newPeer) {
         log.info("Updating our finger table with peer: {}", newPeer);
         this.fingerTable.updateWithSuccessor(newPeer);
@@ -212,8 +256,7 @@ public class Peer extends Node {
                 FindSuccessorRequest request = new FindSuccessorRequest(
                         Host.getHostname(),
                         Host.getIpAddress(),
-                        id,
-                        this.identifier
+                        id
                 );
 
                 try {
@@ -239,7 +282,7 @@ public class Peer extends Node {
 
     public void printFingerTable() {
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("Finger Table for %s:\n", getHostname()));
+        sb.append(String.format("Finger Table for %s:\n", Host.getHostname()));
         List<Identifier> peerIds = this.fingerTable.peerIds;
         for (int i = 0, peerIdsSize = peerIds.size(); i < peerIdsSize; i++) {
             Identifier peerId = peerIds.get(i);
@@ -268,4 +311,66 @@ public class Peer extends Node {
                 String.format("\tsuccessor: %s\n", this.successor);
     }
 
+    public void printFiles() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("Files on %s:\n", Host.getHostname()));
+        for (Map.Entry<String, String> entry : storedFiles.entrySet()) {
+            sb.append(String.format("\t%s: %s\n", entry.getKey(), entry.getValue()));
+        }
+        System.out.println(sb);
+    }
+
+    public void printSuccessor() {
+        System.out.println(this.successor);
+    }
+
+    public void printPredecessor() {
+        System.out.println(this.predecessor);
+    }
+
+    /**
+     * Moves matching files to new predecessor
+     * Look through stored files initiate MoveFileRequests
+     * @param newPredecessorId
+     */
+    public synchronized void moveFilesToNewPredecessor(Identifier newPredecessorId) {
+        Socket predecessorSocket = null;
+        for (Map.Entry<String, String> entry : storedFiles.entrySet()) {
+            String fileId = entry.getKey();
+            String fileName = entry.getValue();
+            if (HashUtil.hexToInt(fileId) <= newPredecessorId.value()) {
+                log.info("File {}({}) should be moved to new predecessor {}", fileName, fileId, newPredecessorId);
+                try {
+                    // read file from disk
+                    byte[] fileBytes = FileUtil.readFileAsBytes(
+                            Constants.Peer.DATA_DIR + File.separator + fileName);
+                    MoveFileRequest mfRequest = new MoveFileRequest(
+                            Host.getHostname(),
+                            Host.getIpAddress(),
+                            fileId,
+                            fileName,
+                            fileBytes
+                    );
+                    predecessorSocket = Client.sendMessage(newPredecessorId.hostname, Constants.Peer.PORT, mfRequest);
+                    DataInputStream dataInputStream = new DataInputStream(predecessorSocket.getInputStream());
+                    MoveFileResponse mfResponse =
+                            (MoveFileResponse) MessageFactory.getInstance().createMessage(dataInputStream);
+                    log.info("File {}({}) successfully moved to {}",
+                            mfResponse.fileName, mfResponse.fileId, mfResponse.hostname);
+                    // remove file from current peer
+                    removeFile(fileId);
+                } catch (IOException e) {
+                    log.error(e.getLocalizedMessage());
+                }
+            }
+        }
+
+        if (predecessorSocket != null) {
+            try {
+                predecessorSocket.close();
+            } catch (IOException e) {
+                log.error(e.getLocalizedMessage());
+            }
+        }
+    }
 }

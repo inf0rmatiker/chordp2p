@@ -7,10 +7,8 @@ import org.chord.util.InteractiveCommandParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Random;
 import java.util.Vector;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class DiscoveryNode extends Node {
     private static final Logger log = LoggerFactory.getLogger(DiscoveryNode.class);

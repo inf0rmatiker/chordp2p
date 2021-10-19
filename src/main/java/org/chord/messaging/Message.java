@@ -4,7 +4,11 @@ import org.chord.peer.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -20,7 +24,9 @@ public abstract class Message {
     public enum MessageType {
         REGISTER_PEER_REQUEST, REGISTER_PEER_RESPONSE, PEER_IDENTIFIER_MESSAGE, GET_PREDECESSOR_REQUEST,
         GET_SUCCESSOR_REQUEST, NETWORK_JOIN_NOTIFICATION, NETWORK_EXIT_NOTIFICATION, FIND_SUCCESSOR_REQUEST,
-        PREDECESSOR_NOTIFICATION, SUCCESSOR_NOTIFICATION, STATUS_MESSAGE
+        PREDECESSOR_NOTIFICATION, SUCCESSOR_NOTIFICATION, STATUS_MESSAGE, GET_RANDOM_PEER_REQUEST,
+        GET_RANDOM_PEER_RESPONSE, LOOKUP_REQUEST, LOOKUP_RESPONSE, STORE_FILE_REQUEST, STORE_FILE_RESPONSE,
+        MOVE_FILE_REQUEST, MOVE_FILE_RESPONSE
     }
 
     public enum Status {
@@ -147,6 +153,18 @@ public abstract class Message {
         for (String value : values) {
             writeString(dataOutputStream, value);
         }
+    }
+
+    public static void writeByteArray(DataOutputStream dataOutputStream, byte[] bytes) throws IOException {
+        writeInt(dataOutputStream, bytes.length);
+        dataOutputStream.write(bytes);
+    }
+
+    public static byte[] readByteArray(DataInputStream dataInputStream) throws IOException {
+        int length = dataInputStream.readInt();
+        byte[] bytes =  new byte[length];
+        dataInputStream.readFully(bytes);
+        return bytes;
     }
 
     /**
@@ -284,6 +302,14 @@ public abstract class Message {
             case 8: return MessageType.PREDECESSOR_NOTIFICATION;
             case 9: return MessageType.SUCCESSOR_NOTIFICATION;
             case 10: return MessageType.STATUS_MESSAGE;
+            case 11: return MessageType.GET_RANDOM_PEER_REQUEST;
+            case 12: return MessageType.GET_RANDOM_PEER_RESPONSE;
+            case 13: return MessageType.LOOKUP_REQUEST;
+            case 14: return MessageType.LOOKUP_RESPONSE;
+            case 15: return MessageType.STORE_FILE_REQUEST;
+            case 16: return MessageType.STORE_FILE_RESPONSE;
+            case 17: return MessageType.MOVE_FILE_REQUEST;
+            case 18: return MessageType.MOVE_FILE_RESPONSE;
             default: return null;
         }
     }
@@ -310,6 +336,14 @@ public abstract class Message {
             case PREDECESSOR_NOTIFICATION: return 8;
             case SUCCESSOR_NOTIFICATION: return 9;
             case STATUS_MESSAGE: return 10;
+            case GET_RANDOM_PEER_REQUEST: return 11;
+            case GET_RANDOM_PEER_RESPONSE: return 12;
+            case LOOKUP_REQUEST: return 13;
+            case LOOKUP_RESPONSE: return 14;
+            case STORE_FILE_REQUEST: return 15;
+            case STORE_FILE_RESPONSE: return 16;
+            case MOVE_FILE_REQUEST: return 17;
+            case MOVE_FILE_RESPONSE: return 18;
             default: return -1;
         }
     }

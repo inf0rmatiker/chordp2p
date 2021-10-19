@@ -110,10 +110,10 @@ public class FingerTable {
      */
     public boolean knowsFinalSuccessorOf(String id) {
         int k = Identifier.valueOf(id);
-        int us = identifier.value();
+        int us = this.identifier.value();
         if (us == k) return true;
 
-        int firstSuccessor = peerIds.get(0).value();
+        int firstSuccessor = this.peerIds.get(0).value();
         return (isSuccessorOf(firstSuccessor, k));
     }
 
@@ -145,7 +145,7 @@ public class FingerTable {
 
     /**
      * Finds the successor of an identifier, using the information available in our finger table.
-     * The successor(k) is the successor node with the smallest id p, such that p >= k.
+     * The successor(k) is the
      * @param id The String hex representation of k
      * @return The Identifier of the successor for k, with respect to this peer p.
      */
@@ -157,21 +157,36 @@ public class FingerTable {
 
         // If it's the same position as p, return our identifier
         if (k == p) {
-            log.debug("successor({}): k == p, returning our own identifier", id);
-            return identifier;
-        } else {
-            for (Identifier peerId : peerIds) {
-                int successor = peerId.value();
-                if (isSuccessorOf(successor, k)) {
-                    log.debug("successor({}): found successor {} of k {}", id, successor, k);
-                    return peerId;
-                }
+            log.debug("successor({}): k == p, returning our own identifier", k);
+            return this.identifier;
+        } else if (isSuccessorOf(this.peerIds.get(0).value(), k)) { // p < k < FT[0]
+            log.debug("successor({}): FT[0]={} is successor of k", k, this.peerIds.get(0).value());
+            return this.peerIds.get(0);
+        }
+        log.error("We don't know the final predecessor of k {} !", k);
+        return null;
+    }
+
+    /**
+     * Finds the closest predecessor of k.
+     * The closest predecessor is a peer node with the smallest id p, such that p <= k.
+     * @param id k
+     * @return Best predecessor of k
+     */
+    public Identifier bestPredecessorOf(String id) {
+        int k = Identifier.valueOf(id);
+
+        for (int i = 1; i < this.peerIds.size(); i++) {
+            Identifier peerId = this.peerIds.get(i);
+            int successor = peerId.value();
+            if (isSuccessorOf(successor, k)) {
+                log.debug("bestPredecessorOf({}): found predecessor {} of k {}", id, successor, k);
+                return this.peerIds.get(i-1);
             }
         }
-
-        log.debug("successor({}): did not find successor of k {}, returning last successor in finger table: {}",
-                id, k, peerIds.get(peerIds.size()-1));
-        return peerIds.get(peerIds.size()-1); // we didn't reach k, so return the closest point we can get to it
+        log.debug("bestPredecessorOf({}): did not find a suitable predecessor of k {}, returning last successor in finger table: {}",
+                id, k, this.peerIds.get(this.peerIds.size()-1));
+        return this.peerIds.get(this.peerIds.size()-1); // we didn't reach k, so return the closest point we can get to it
     }
 
     /**

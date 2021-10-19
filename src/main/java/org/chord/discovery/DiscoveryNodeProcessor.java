@@ -1,8 +1,10 @@
 package org.chord.discovery;
 
+import org.chord.messaging.GetRandomPeerRequest;
+import org.chord.messaging.GetRandomPeerResponse;
 import org.chord.messaging.Message;
-import org.chord.messaging.NetworkJoinNotification;
 import org.chord.messaging.NetworkExitNotification;
+import org.chord.messaging.NetworkJoinNotification;
 import org.chord.messaging.RegisterPeerRequest;
 import org.chord.messaging.RegisterPeerResponse;
 import org.chord.networking.Processor;
@@ -12,9 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class DiscoveryNodeProcessor extends Processor {
 
@@ -40,9 +39,19 @@ public class DiscoveryNodeProcessor extends Processor {
             case NETWORK_EXIT_NOTIFICATION:
                 processPeerExitNotification((NetworkExitNotification) message);
                 break;
+            case GET_RANDOM_PEER_REQUEST:
+                processGetRandomPeerRequest((GetRandomPeerRequest) message);
+                break;
             default:
                 log.error("Unimplemented Message type: \"{}\"", message.getType());
         }
+    }
+
+    private void processGetRandomPeerRequest(GetRandomPeerRequest message) {
+        log.info("StoreData ({}) requesting random peer", message.hostname);
+        Identifier randomPeer = discoveryNode.getRandomPeer();
+        GetRandomPeerResponse response = new GetRandomPeerResponse(Host.getHostname(), Host.getIpAddress(), randomPeer);
+        sendResponse(this.socket, response);
     }
 
     private void processPeerExitNotification(NetworkExitNotification message) {

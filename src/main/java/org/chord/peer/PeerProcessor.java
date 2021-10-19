@@ -1,6 +1,21 @@
 package org.chord.peer;
 
-import org.chord.messaging.*;
+import org.chord.messaging.FindSuccessorRequest;
+import org.chord.messaging.GetPredecessorRequest;
+import org.chord.messaging.GetSuccessorRequest;
+import org.chord.messaging.LookupRequest;
+import org.chord.messaging.LookupResponse;
+import org.chord.messaging.Message;
+import org.chord.messaging.MessageFactory;
+import org.chord.messaging.MoveFileRequest;
+import org.chord.messaging.MoveFileResponse;
+import org.chord.messaging.NetworkJoinNotification;
+import org.chord.messaging.PeerIdentifierMessage;
+import org.chord.messaging.PredecessorNotification;
+import org.chord.messaging.StatusMessage;
+import org.chord.messaging.StoreFileRequest;
+import org.chord.messaging.StoreFileResponse;
+import org.chord.messaging.SuccessorNotification;
 import org.chord.networking.Client;
 import org.chord.networking.Processor;
 import org.chord.util.Constants;
@@ -52,7 +67,17 @@ public class PeerProcessor extends Processor {
                 case NETWORK_JOIN_NOTIFICATION:
                     processNetworkJoinNotification((NetworkJoinNotification) message);
                     return;
-                default: log.error("Unimplemented processing support for message type {}", message.getType());
+                case LOOKUP_REQUEST:
+                    processLookupRequest((LookupRequest) message);
+                    break;
+                case STORE_FILE_REQUEST:
+                    processStoreFileRequest((StoreFileRequest) message);
+                    break;
+                case MOVE_FILE_REQUEST:
+                    processMoveFileRequest((MoveFileRequest) message);
+                    break;
+                default:
+                    log.error("Unimplemented processing support for message type {}", message.getType());
             }
         } catch (IOException e) {
             log.error("Encountered IOException when processing {}: {}", message.getType(), e.getMessage());
@@ -60,8 +85,82 @@ public class PeerProcessor extends Processor {
 
     }
 
+    private void processMoveFileRequest(MoveFileRequest message) {
+        try {
+            peer.storeFile(message.fileId, message.fileName, message.fileBytes);
+            MoveFileResponse mfResponse = new MoveFileResponse(
+                    Host.getHostname(),
+                    Host.getIpAddress(),
+                    message.fileId,
+                    message.fileName
+            );
+            sendResponse(this.socket, mfResponse);
+        } catch (IOException e) {
+            log.error("Unable to store file {}({}): {}", message.fileName, message.fileId, e.getLocalizedMessage());
+        }
+    }
+
+    private void processStoreFileRequest(StoreFileRequest message) {
+        try {
+            this.peer.storeFile(message.fileId, message.fileName, message.bytes);
+            StoreFileResponse storeFileResponse = new StoreFileResponse(
+                    Host.getHostname(),
+                    Host.getIpAddress(),
+                    message.fileId,
+                    message.fileName
+            );
+            sendResponse(this.socket, storeFileResponse);
+        } catch (IOException e) {
+            log.error(e.getLocalizedMessage());
+        }
+    }
+
+    /**
+     * Processes a LookupRequest Message by finding the most suitable peer for given fileId k
+     *
+     * @param message LookupRequest Message
+     */
+    private void processLookupRequest(LookupRequest message) {
+        String k = message.fileId;
+        String hostname = message.hostname;
+        String storeDataHost = message.storeDataHost;
+        String storeDataIpAddress = message.storeDataIpAddress;
+        log.info("{} initiating lookup({})", hostname, k);
+
+        FindSuccessorRequest successorRequest = new FindSuccessorRequest(
+                Host.getHostname(),
+                Host.getIpAddress(),
+                k
+        );
+
+        // send successorRequest to the successor of current peer
+        try {
+            Socket peerSocket =
+                    Client.sendMessage(this.peer.getSuccessor().hostname, Constants.Peer.PORT, successorRequest);
+            DataInputStream dataInputStream = new DataInputStream(peerSocket.getInputStream());
+            PeerIdentifierMessage pimResponse =
+                    (PeerIdentifierMessage) MessageFactory.getInstance().createMessage(dataInputStream);
+            peerSocket.close();
+
+            // matching peer for fileId k
+            Identifier matchingPeer = pimResponse.getPeerId();
+            log.info("Matching peer for file({}): {}, message received from {}", k, matchingPeer, pimResponse.hostname);
+
+            // send lookup response to store data
+            LookupResponse lookupResponse = new LookupResponse(
+                    Host.getHostname(),
+                    Host.getIpAddress(),
+                    matchingPeer
+            );
+            sendResponse(this.socket, lookupResponse);
+        } catch (IOException e) {
+            log.error(e.getLocalizedMessage());
+        }
+    }
+
     /**
      * Processes a GetPredecessorRequest Message, by sending back our predecessor
+     *
      * @param message GetPredecessorRequest Message
      * @throws IOException If unable to read/write from/to the Socket, or marshal/unmarshal a Message
      */
@@ -78,6 +177,7 @@ public class PeerProcessor extends Processor {
 
     /**
      * Processes a GetSuccessorRequest Message, by sending back our successor
+     *
      * @param message GetSuccessorRequest Message
      * @throws IOException If unable to read/write from/to the Socket, or marshal/unmarshal a Message
      */
@@ -96,8 +196,9 @@ public class PeerProcessor extends Processor {
      * Processes a FindSuccessorRequest Message, containing an id, k, by:
      * - If we know the final successor of k (it's the first entry in our finger table), return that.
      * - If we don't know the successor of k, we forward the message to the first successor p in our
-     *      finger table such that p is the smallest value >= k. This is the nextBestSuccessor.
-     *      The response from the forward recipient is then sent back to the requester.
+     * finger table such that p is the smallest value >= k. This is the nextBestSuccessor.
+     * The response from the forward recipient is then sent back to the requester.
+     *
      * @param message FindSuccessorRequest Message containing k
      * @throws IOException If unable to read/write from streams/sockets
      */
@@ -118,66 +219,42 @@ public class PeerProcessor extends Processor {
 
         } else { // We don't know the final successor of k, so forward request to next best successor in finger table
 
-            Identifier nextBestSuccessor = ourFingerTable.successor(id);
-            log.info("The next best successor we know of {} is: {}", id, nextBestSuccessor);
+            Identifier bestPredecessor = ourFingerTable.bestPredecessorOf(id);
+            log.info("The best predecessor we know of {} is: {}", id, bestPredecessor);
 
-            if (nextBestSuccessor.equals(this.peer.getIdentifier())) {
+            try {
+                log.info("Forwarding FindSuccessorRequest message from {} to {}: {}", message.getHostname(),
+                        bestPredecessor.getHostname(), message);
 
-                log.info("Next best successor of {} is us; returning {} as final successor", id,
-                        this.peer.getIdentifier());
-                PeerIdentifierMessage response = new PeerIdentifierMessage(
-                        Host.getHostname(),
-                        Host.getIpAddress(),
-                        nextBestSuccessor
-                );
-                sendResponse(this.socket, response);
-
-            } else if (nextBestSuccessor.equals(message.getRequesterId())) {
-
-                log.info("Next best successor of {} is the requester; returning {} as final successor", id,
-                        message.getRequesterId());
-                PeerIdentifierMessage response = new PeerIdentifierMessage(
-                        Host.getHostname(),
-                        Host.getIpAddress(),
-                        nextBestSuccessor
-                );
-                sendResponse(this.socket, response);
-
-            } else  { // forward request to next best successor
-
-                try {
-                    log.info("Forwarding FindSuccessorRequest message from {} to {}: {}", message.getHostname(),
-                            nextBestSuccessor.getHostname(), message);
-
-                    // Change message's hostname/ip address to ours and re-marshal
-                    message.hostname = Host.getHostname();
-                    message.ipAddress = Host.getIpAddress();
-                    message.marshal();
-                    if (this.socket.isClosed()) {
-                        log.error("Socket has been closed 0!!!");
-                    }
-
-                    // Open Socket to next best successor, request successor(k), get response, re-marshal it
-                    Socket successorSocket = Client.sendMessage(nextBestSuccessor.getHostname(), Constants.Peer.PORT, message);
-                    DataInputStream dataInputStream = new DataInputStream(successorSocket.getInputStream());
-                    PeerIdentifierMessage response = (PeerIdentifierMessage) MessageFactory.getInstance().
-                            createMessage(dataInputStream);
-                    response.marshal(); // important! received message is not automatically marshaled
-                    dataInputStream.close();
-                    successorSocket.close(); // done talking with next best successor peer
-
-                    // Return response to original requester
-                    log.info("Received final result of FindSuccessorRequest from {}: {}", response.getHostname(), response);
-                    if (this.socket.isClosed()) {
-                        log.error("Socket has been closed 1!!!");
-                    }
-                    sendResponse(this.socket, response);
-
-                } catch (IOException e) {
-                    log.error("Failed to forward FindSuccessorRequest Message to {}: {}", nextBestSuccessor.getHostname(),
-                            e.getMessage());
+                // Change message's hostname/ip address to ours and re-marshal
+                message.hostname = Host.getHostname();
+                message.ipAddress = Host.getIpAddress();
+                message.marshal();
+                if (this.socket.isClosed()) {
+                    log.error("Socket has been closed 0!!!");
                 }
+
+                // Open Socket to next best successor, request successor(k), get response, re-marshal it
+                Socket successorSocket = Client.sendMessage(bestPredecessor.getHostname(), Constants.Peer.PORT, message);
+                DataInputStream dataInputStream = new DataInputStream(successorSocket.getInputStream());
+                PeerIdentifierMessage response = (PeerIdentifierMessage) MessageFactory.getInstance().
+                        createMessage(dataInputStream);
+                response.marshal(); // important! received message is not automatically marshaled
+                dataInputStream.close();
+                successorSocket.close(); // done talking with next best successor peer
+
+                // Return response to original requester
+                log.info("Received final result of FindSuccessorRequest from {}: {}", response.getHostname(), response);
+                if (this.socket.isClosed()) {
+                    log.error("Socket has been closed 1!!!");
+                }
+                sendResponse(this.socket, response);
+
+            } catch (IOException e) {
+                log.error("Failed to forward FindSuccessorRequest Message to {}: {}", bestPredecessor.getHostname(),
+                        e.getMessage());
             }
+
         }
     }
 
@@ -190,6 +267,8 @@ public class PeerProcessor extends Processor {
                 Host.getIpAddress(),
                 Message.Status.OK
         ));
+
+        peer.moveFilesToNewPredecessor(peer.getPredecessor());
     }
 
     public void processSuccessorNotification(SuccessorNotification message) throws IOException {
@@ -207,11 +286,9 @@ public class PeerProcessor extends Processor {
         if (!message.getPeerId().equals(this.peer.getIdentifier())) {
             log.info("Updating finger table with peer: {}", message.getPeerId());
             this.peer.updateFingerTable(message.getPeerId());
-            log.debug("NetworkJoinNotification Message: {}", message);
-            if (!message.getPeerId().equals(this.peer.getPredecessor())) {
-                Client.sendMessage(this.peer.getPredecessor().getHostname(), Constants.Peer.PORT, message).close();
-            }
+            log.debug("Forwarding NetworkJoinNotification Message to {}: {}", this.peer.getSuccessor(), message);
+            message.marshal();
+            Client.sendMessage(this.peer.getSuccessor().getHostname(), Constants.Peer.PORT, message).close();
         }
     }
-
 }

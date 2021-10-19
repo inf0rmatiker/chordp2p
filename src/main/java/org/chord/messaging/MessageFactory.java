@@ -58,6 +58,14 @@ public class MessageFactory {
                 case PREDECESSOR_NOTIFICATION: return new PredecessorNotification(dataInputStream);
                 case SUCCESSOR_NOTIFICATION: return new SuccessorNotification(dataInputStream);
                 case STATUS_MESSAGE: return new StatusMessage(dataInputStream);
+                case GET_RANDOM_PEER_REQUEST: return new GetRandomPeerRequest(dataInputStream);
+                case GET_RANDOM_PEER_RESPONSE: return new GetRandomPeerResponse(dataInputStream);
+                case LOOKUP_REQUEST: return new LookupRequest(dataInputStream);
+                case LOOKUP_RESPONSE: return new LookupResponse(dataInputStream);
+                case STORE_FILE_REQUEST: return new StoreFileRequest(dataInputStream);
+                case STORE_FILE_RESPONSE: return new StoreFileResponse(dataInputStream);
+                case MOVE_FILE_REQUEST: return new MoveFileRequest(dataInputStream);
+                case MOVE_FILE_RESPONSE: return new MoveFileResponse(dataInputStream);
                 default: return null;
             }
         } else {

@@ -29,6 +29,7 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Peer extends Node {
     private static final Logger log = LoggerFactory.getLogger(Peer.class);
@@ -42,7 +43,7 @@ public class Peer extends Node {
     private Identifier successor;
 
     // fileId (16-bit digest), fileName
-    private HashMap<String, String> storedFiles;
+    private ConcurrentHashMap<String, String> storedFiles;
 
     private InteractiveCommandParser commandParser;
 
@@ -51,7 +52,7 @@ public class Peer extends Node {
         this.discoveryNodePort = discoveryNodePort;
         this.identifier = this.predecessor = this.successor = identifier; // init all known peers to our id
         this.fingerTable = new FingerTable(Constants.FINGER_TABLE_SIZE, identifier);
-        storedFiles = new HashMap<>();
+        storedFiles = new ConcurrentHashMap<>();
         commandParser = new InteractiveCommandParser(this);
     }
 
@@ -335,11 +336,15 @@ public class Peer extends Node {
      */
     public synchronized void moveFilesToNewPredecessor(Identifier newPredecessorId) {
         Socket predecessorSocket = null;
+        if (storedFiles.isEmpty()) {
+            log.info("No files available on {}", Host.getHostname());
+            return;
+        }
         for (Map.Entry<String, String> entry : storedFiles.entrySet()) {
             String fileId = entry.getKey();
             String fileName = entry.getValue();
             if (HashUtil.hexToInt(fileId) <= newPredecessorId.value()) {
-                log.info("File {}({}) should be moved to new predecessor {}", fileName, fileId, newPredecessorId);
+                log.info("Moving file {}({}) to new predecessor {}", fileName, fileId, newPredecessorId);
                 try {
                     // read file from disk
                     byte[] fileBytes = FileUtil.readFileAsBytes(

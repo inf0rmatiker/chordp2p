@@ -203,6 +203,8 @@ public class PeerProcessor extends Processor {
      * @throws IOException If unable to read/write from streams/sockets
      */
     public void processFindSuccessorRequest(FindSuccessorRequest message) throws IOException {
+        message.incrementHops();
+        log.info("Processing FindSuccessorRequest with {} hops", message.getCurrentHops());
         FingerTable ourFingerTable = this.peer.getFingerTable();
         String id = message.getId();
 
@@ -245,9 +247,6 @@ public class PeerProcessor extends Processor {
 
                 // Return response to original requester
                 log.info("Received final result of FindSuccessorRequest from {}: {}", response.getHostname(), response);
-                if (this.socket.isClosed()) {
-                    log.error("Socket has been closed 1!!!");
-                }
                 sendResponse(this.socket, response);
 
             } catch (IOException e) {

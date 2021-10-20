@@ -15,10 +15,14 @@ public class FindSuccessorRequest extends Message {
     // Id of data item or node we want the successor of
     public String id;
 
+    // Number of hops a lookup request has taken so far
+    public Integer currentHops;
+
     public FindSuccessorRequest(String hostname, String ipAddress, String id) {
         this.hostname = hostname;
         this.ipAddress = ipAddress;
         this.id = id;
+        this.currentHops = 0;
         try {
             marshal();
         } catch (IOException e) {
@@ -39,16 +43,26 @@ public class FindSuccessorRequest extends Message {
         return id;
     }
 
+    public Integer getCurrentHops() {
+        return currentHops;
+    }
+
+    public void incrementHops() {
+        this.currentHops++;
+    }
+
     @Override
     public void marshal(DataOutputStream dataOutputStream) throws IOException {
         super.marshal(dataOutputStream);
-        writeString(dataOutputStream, id);
+        writeString(dataOutputStream, this.id);
+        writeInt(dataOutputStream, this.currentHops);
     }
 
     @Override
     public void unmarshal(DataInputStream dataInputStream) throws IOException {
         super.unmarshal(dataInputStream);
         this.id = readString(dataInputStream);
+        this.currentHops = readInt(dataInputStream);
     }
 
     @Override
@@ -63,6 +77,7 @@ public class FindSuccessorRequest extends Message {
     @Override
     public String toString() {
         return "\nFindSuccessorRequest:\n" +
-                String.format("\tid: %s\n", this.id);
+                String.format("\tid: %s\n", this.id) +
+                String.format("\tcurrentHops: %s\n", this.currentHops);
     }
 }

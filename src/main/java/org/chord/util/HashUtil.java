@@ -10,6 +10,16 @@ public class HashUtil {
     private static final Logger log = LoggerFactory.getLogger(HashUtil.class);
 
     /**
+     * Determines if a specified ID is less than or equal
+     * to the maximum ID allowed in the system.
+     * @param id
+     * @return
+     */
+    public static boolean isIdValid(String id) {
+        return Constants.MAX_ID >= hexToInt(id);
+    }
+
+    /**
      * Calculates the 16-bit digest for a given array of bytes
      * Returns the hex representation of the digest
      * @param fileBytes

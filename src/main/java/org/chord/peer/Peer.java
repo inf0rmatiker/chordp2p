@@ -87,6 +87,10 @@ public class Peer extends Node {
      *     - If request rejected, we retry with a different proposed id
      */
     public void joinNetwork() {
+        if (!HashUtil.isIdValid(this.identifier.id)) {
+            log.warn("Invalid ID {}", this.identifier.id);
+            System.exit(1);
+        }
 
         RegisterPeerRequest registerRequest = new RegisterPeerRequest(
                 Host.getHostname(),
@@ -106,6 +110,11 @@ public class Peer extends Node {
             Socket clientSocket = Client.sendMessage(this.discoveryNodeHostname, this.discoveryNodePort, registerRequest);
             DataInputStream dataInputStream = new DataInputStream(clientSocket.getInputStream());
             RegisterPeerResponse rprResponse = (RegisterPeerResponse) MessageFactory.getInstance().createMessage(dataInputStream);
+            if (!rprResponse.getIsValidRequest()) {
+                log.warn("A Peer with ID {} already exists in the network.", this.identifier.id);
+                System.exit(1);
+            }
+
             log.info("Received {} Message: {}", rprResponse.getType(), rprResponse);
             clientSocket.close(); // done talking to discovery server
             updateFingerTable(rprResponse.getRandomPeerId());

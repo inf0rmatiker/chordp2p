@@ -50,7 +50,12 @@ public class DiscoveryNode extends Node {
     }
 
     public boolean alreadyExists(Identifier peerId) {
-        return this.registeredPeers.contains(peerId);
+        for (Identifier registeredPeer : this.registeredPeers) {
+            if (registeredPeer.getId().equals(peerId.getId())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean remove(Identifier peerId) {

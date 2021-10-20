@@ -12,6 +12,9 @@ executable:
 discovery:
 	java -cp build/libs/chordp2p-uber.jar org.chord.Main --discovery-node
 
+discovery-debug:
+	java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -cp build/libs/chordp2p-uber.jar org.chord.Main --discovery-node
+
 # Example: make store-data DISCOVERY=shark
 store-data:
 	java -cp build/libs/chordp2p-uber.jar org.chord.Main --store-data $(DISCOVERY)

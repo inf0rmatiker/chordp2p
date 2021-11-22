@@ -39,7 +39,8 @@ Not a critical component of the system, but acts like trackers do in other distr
 
 Every time a peer joins the network, it reaches out to the Discovery Node, and the Discovery Node returns the network information
 of a random peer that is currently being tracked. The random selection of a node provides a basic load-balancing mechanism.
-Once a random peer is 
+Once a random peer is selected, its hostname/IP address is returned to the Peer requesting to join the network. This allows
+a Peer to get in contact with an existing Peer in the ring.
 
 ## Client
 

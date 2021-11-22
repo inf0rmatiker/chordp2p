@@ -1,6 +1,6 @@
 # chordp2p
 
-_Authors: Caleb Carlson, Menuka Warushavithina_
+_Authors: [Caleb Carlson](https://github.com/inf0rmatiker), [Menuka Warushavithana](https://github.com/menuka94)
 
 Team-based implementation of Chord's Peer-to-Peer Distributed Hashtable (DHT) written in Java, to complete
 [CS555: Distributed Systems](https://www.cs.colostate.edu/~cs555/)' [Assignment 2](docs/CS555-Fall2021-HW2.pdf) *(click link to view description)*.
